@@ -10,65 +10,67 @@ and automated-testing fundamentals behind it.
 By the end of Sprint 1, the service provides a layered Employee REST API
 backed by PostgreSQL with:
 
--   Spring Boot application startup and auto-configuration
--   PostgreSQL connectivity
--   JPA/Hibernate persistence
--   Spring Data JPA repository
--   Controller → Service → Repository layering
--   Full Employee CRUD
--   Request and response DTOs
--   Bean Validation
--   Structured validation errors
--   Custom 404 handling
--   Email uniqueness handling with HTTP 409
--   Database-level email uniqueness
--   Automated service tests
--   Spring application-context test
--   Database credentials externalized through an environment variable
+- Spring Boot application startup and auto-configuration
+- PostgreSQL connectivity
+- JPA/Hibernate persistence
+- Spring Data JPA repository
+- Controller → Service → Repository layering
+- Full Employee CRUD
+- Request and response DTOs
+- Bean Validation
+- Structured validation errors
+- Custom 404 handling
+- Email uniqueness handling with HTTP 409
+- Database-level email uniqueness
+- Automated service tests
+- Spring application-context test
+- Database credentials externalized through an environment variable
 
-------------------------------------------------------------------------
+---
 
-## 2. Sprint Status
+## 2. Sprint Status: COMPLETE
 
 **Sprint 1 implementation and technical validation are complete.**
 
 Final validation completed on 25 August 2026:
 
--   Application starts successfully with externalized database
-    credentials.
--   All 8 automated tests pass.
--   Final API smoke test passed:
-    -   `GET /api/employees` → `200 OK`
-    -   Valid `POST /api/employees` → `201 Created`
-    -   Duplicate-email `POST /api/employees` → `409 Conflict`
-    -   `GET /api/employees/999` → `404 Not Found`
+- Application starts successfully with externalized database
+  credentials.
+- All 8 automated tests pass.
+- Final API smoke test passed:
+  - `GET /api/employees` → `200 OK`
+  - Valid `POST /api/employees` → `201 Created`
+  - Duplicate-email `POST /api/employees` → `409 Conflict`
+  - `GET /api/employees/999` → `404 Not Found`
 
-The only remaining activity is the Git checkpoint: review the final
-changes, commit them on a feature branch, push the feature branch, merge
-into `develop`, push `develop`, and verify a clean working tree.
+The Sprint 1 Git checkpoint is also complete. The final changes were
+reviewed, committed on a feature branch, pushed, merged into `develop`,
+and pushed to `develop`. The working tree was then verified clean.
 
-------------------------------------------------------------------------
+---
 
 ## 3. Technology Baseline
 
-  Technology               Version / Usage
-  ------------------------ --------------------------------------------------
-  Java                     21.0.12 LTS
-  Spring Boot              4.1.0
-  Hibernate ORM            7.4.1.Final
-  PostgreSQL               17.10
-  Maven                    3.9.11
-  PostgreSQL JDBC Driver   42.7.11 runtime dependency
-  Embedded Web Server      Tomcat
-  Default Port             8080
-  Database                 `nexus`
-  Main Schema              `public`
-  API Testing              Postman
-  Automated Testing        JUnit + Mockito through Spring Boot test support
+Technology Version / Usage
+
+---
+
+Java 21.0.12 LTS
+Spring Boot 4.1.0
+Hibernate ORM 7.4.1.Final
+PostgreSQL 17.10
+Maven 3.9.11
+PostgreSQL JDBC Driver 42.7.11 runtime dependency
+Embedded Web Server Tomcat
+Default Port 8080
+Database `nexus`
+Main Schema `public`
+API Testing Postman
+Automated Testing JUnit + Mockito through Spring Boot test support
 
 Current Java package:
 
-``` text
+```text
 com.nexuslabs.employee_service
 ```
 
@@ -76,7 +78,7 @@ The underscore package name is intentionally left unchanged during
 Sprint 1. A controlled package-name cleanup can be considered separately
 rather than mixing it into unrelated feature work.
 
-------------------------------------------------------------------------
+---
 
 # Part I --- Project and Maven Foundation
 
@@ -85,13 +87,13 @@ rather than mixing it into unrelated feature work.
 The Employee Service was generated as a Maven-based Spring Boot project
 under:
 
-``` text
+```text
 backend/employee-service/
 ```
 
 Important project coordinates:
 
-``` text
+```text
 groupId    : com.nexuslabs
 artifactId : employee-service
 version    : 0.0.1-SNAPSHOT
@@ -102,14 +104,14 @@ The project uses a JAR-based Spring Boot application.
 
 Important dependencies introduced during the foundation included:
 
--   Spring Web MVC
--   Spring Data JPA
--   Bean Validation
--   PostgreSQL JDBC Driver
--   Spring Boot Test
--   Development tooling
+- Spring Web MVC
+- Spring Data JPA
+- Bean Validation
+- PostgreSQL JDBC Driver
+- Spring Boot Test
+- Development tooling
 
-------------------------------------------------------------------------
+---
 
 ## 5. Maven Fundamentals
 
@@ -120,24 +122,24 @@ Maven is the project's build and dependency-management tool.
 Instead of manually downloading JAR files and compiling every source
 file ourselves, Maven can:
 
--   Resolve dependencies
--   Resolve transitive dependencies
--   Compile source code
--   Compile test code
--   Run tests
--   Package the application
--   Execute Maven plugins
--   Run the Spring Boot application
+- Resolve dependencies
+- Resolve transitive dependencies
+- Compile source code
+- Compile test code
+- Run tests
+- Package the application
+- Execute Maven plugins
+- Run the Spring Boot application
 
 Examples used during Sprint 1:
 
-``` bash
+```bash
 mvn dependency:tree
 mvn spring-boot:run
 mvn test
 ```
 
-------------------------------------------------------------------------
+---
 
 ### 5.2 Direct Dependencies
 
@@ -145,7 +147,7 @@ A direct dependency is explicitly declared by our project in `pom.xml`.
 
 Example concept:
 
-``` text
+```text
 employee-service
     ↓
 PostgreSQL JDBC Driver
@@ -153,7 +155,7 @@ PostgreSQL JDBC Driver
 
 Our project directly requests the PostgreSQL driver.
 
-------------------------------------------------------------------------
+---
 
 ### 5.3 Transitive Dependencies
 
@@ -162,7 +164,7 @@ application. It is downloaded because another dependency requires it.
 
 Conceptual example:
 
-``` text
+```text
 employee-service
         ↓
 spring-boot-starter-data-jpa
@@ -177,23 +179,23 @@ manually locate every library required by a framework.
 
 Command used to inspect the dependency graph:
 
-``` bash
+```bash
 mvn dependency:tree
 ```
 
 The PostgreSQL dependency was verified with:
 
-``` powershell
+```powershell
 mvn dependency:tree | Select-String "postgresql"
 ```
 
 Observed:
 
-``` text
+```text
 org.postgresql:postgresql:jar:42.7.11:runtime
 ```
 
-------------------------------------------------------------------------
+---
 
 ### 5.4 Spring Boot Starters
 
@@ -202,7 +204,7 @@ application capability.
 
 Examples:
 
-``` text
+```text
 spring-boot-starter-webmvc
 spring-boot-starter-data-jpa
 spring-boot-starter-validation
@@ -211,7 +213,7 @@ spring-boot-starter-test
 
 Important distinction:
 
-``` text
+```text
 Starter               → which related dependencies should come together
 Dependency management → which compatible versions should be used
 ```
@@ -219,7 +221,7 @@ Dependency management → which compatible versions should be used
 A starter reduces the amount of individual framework dependencies we
 need to manage manually.
 
-------------------------------------------------------------------------
+---
 
 ### 5.5 Dependency Scopes
 
@@ -235,7 +237,7 @@ Dependency is primarily needed when the application executes.
 
 The PostgreSQL JDBC driver is a good example:
 
-``` text
+```text
 PostgreSQL JDBC Driver → runtime
 ```
 
@@ -250,7 +252,7 @@ application's runtime classpath.
 
 Testing libraries are examples.
 
-------------------------------------------------------------------------
+---
 
 ### 5.6 Parent POM and Dependency Management
 
@@ -258,13 +260,13 @@ Spring Boot dependency management provides tested dependency versions.
 
 Important distinction:
 
-``` text
+```text
 <dependencies>
 ```
 
 actually adds a dependency to the project.
 
-``` text
+```text
 <dependencyManagement>
 ```
 
@@ -274,7 +276,7 @@ used.
 Without dependency management, we would have to specify and maintain
 many compatible versions ourselves.
 
-------------------------------------------------------------------------
+---
 
 ## 6. Maven Dependency vs Maven Plugin
 
@@ -286,7 +288,7 @@ A dependency is code/library functionality used by the application.
 
 Examples:
 
-``` text
+```text
 Spring Data JPA
 PostgreSQL JDBC Driver
 Validation libraries
@@ -298,24 +300,24 @@ A plugin is used by Maven to perform build-related tasks.
 
 Example:
 
-``` text
+```text
 Spring Boot Maven Plugin
 ```
 
 It enables operations such as:
 
-``` bash
+```bash
 mvn spring-boot:run
 ```
 
 Simple rule:
 
-``` text
+```text
 Dependency → used by the application
 Plugin     → used by Maven/build process
 ```
 
-------------------------------------------------------------------------
+---
 
 # Part II --- Spring Boot Fundamentals
 
@@ -323,7 +325,7 @@ Plugin     → used by Maven/build process
 
 Main application class:
 
-``` java
+```java
 @SpringBootApplication
 public class EmployeeServiceApplication {
 
@@ -333,13 +335,13 @@ public class EmployeeServiceApplication {
 }
 ```
 
-------------------------------------------------------------------------
+---
 
 ## 8. `SpringApplication.run()`
 
 The call:
 
-``` java
+```java
 SpringApplication.run(EmployeeServiceApplication.class, args);
 ```
 
@@ -358,13 +360,13 @@ Conceptually it causes Spring Boot to:
 
 This is why one line can trigger a large amount of framework setup.
 
-------------------------------------------------------------------------
+---
 
 ## 9. `@SpringBootApplication`
 
 `@SpringBootApplication` conceptually combines three important ideas:
 
-``` text
+```text
 @SpringBootConfiguration
 @EnableAutoConfiguration
 @ComponentScan
@@ -391,13 +393,13 @@ Spring scans packages for Spring-managed components.
 
 Because the main class is in:
 
-``` text
+```text
 com.nexuslabs.employee_service
 ```
 
 and our application classes are in subpackages such as:
 
-``` text
+```text
 controller
 service
 repository
@@ -405,7 +407,7 @@ repository
 
 Spring can discover them through component scanning.
 
-------------------------------------------------------------------------
+---
 
 # Part III --- IoC, Beans and Dependency Injection
 
@@ -413,7 +415,7 @@ Spring can discover them through component scanning.
 
 Without Spring, application code could manually create dependencies:
 
-``` java
+```java
 EmployeeRepository repository = ...;
 EmployeeService service = new EmployeeService(repository);
 ```
@@ -423,13 +425,13 @@ becomes difficult.
 
 With Spring:
 
-``` text
+```text
 Spring controls object creation and lifecycle management.
 ```
 
 This is the core idea of **Inversion of Control**.
 
-------------------------------------------------------------------------
+---
 
 ## 11. Spring Bean
 
@@ -438,7 +440,7 @@ container/ApplicationContext.
 
 Classes marked with stereotypes such as:
 
-``` java
+```java
 @Service
 @RestController
 @Component
@@ -447,7 +449,7 @@ Classes marked with stereotypes such as:
 can become Spring-managed Beans when discovered through component
 scanning.
 
-------------------------------------------------------------------------
+---
 
 ## 12. Dependency Injection
 
@@ -456,7 +458,7 @@ instead of creating that dependency itself.
 
 Example:
 
-``` java
+```java
 @Service
 public class EmployeeService {
 
@@ -476,13 +478,13 @@ Spring supplies the repository dependency.
 
 Conceptually:
 
-``` text
+```text
 IoC → Spring owns object creation/management.
 
 DI  → Spring supplies one object's required dependencies to another object.
 ```
 
-------------------------------------------------------------------------
+---
 
 ## 13. Constructor Injection
 
@@ -490,17 +492,17 @@ Constructor injection was used throughout the Employee Service.
 
 Benefits include:
 
--   Dependencies are explicit.
--   Required dependencies can be `final`.
--   Classes are easier to unit test.
--   Dependencies can be replaced with mocks during testing.
--   It avoids hidden dependencies.
+- Dependencies are explicit.
+- Required dependencies can be `final`.
+- Classes are easier to unit test.
+- Dependencies can be replaced with mocks during testing.
+- It avoids hidden dependencies.
 
 Temporary demo classes such as greeting-related classes were created
 while learning Bean creation and DI and were removed once the concepts
 were understood.
 
-------------------------------------------------------------------------
+---
 
 # Part IV --- PostgreSQL and DataSource
 
@@ -510,7 +512,7 @@ PostgreSQL 17.10 was verified locally.
 
 Initially:
 
-``` powershell
+```powershell
 psql --version
 ```
 
@@ -519,13 +521,13 @@ available through the expected command path.
 
 The executable was located at:
 
-``` text
+```text
 C:\Program Files\PostgreSQL\17\bin\psql.exe
 ```
 
 PostgreSQL service:
 
-``` text
+```text
 postgresql-x64-17
 ```
 
@@ -533,29 +535,29 @@ was confirmed running.
 
 PostgreSQL version was then verified:
 
-``` text
+```text
 PostgreSQL 17.10
 ```
 
 Database used:
 
-``` text
+```text
 nexus
 ```
 
-------------------------------------------------------------------------
+---
 
 ## 15. Spring DataSource Configuration
 
 The application connects to:
 
-``` text
+```text
 jdbc:postgresql://localhost:5432/nexus
 ```
 
 Configuration concept:
 
-``` properties
+```properties
 spring.datasource.url=jdbc:postgresql://localhost:5432/nexus
 spring.datasource.username=postgres
 spring.datasource.password=${DB_PASSWORD}
@@ -563,7 +565,7 @@ spring.datasource.password=${DB_PASSWORD}
 
 The password is **not stored directly in the committed configuration**.
 
-------------------------------------------------------------------------
+---
 
 ## 16. Externalizing Database Credentials
 
@@ -575,7 +577,7 @@ source control.
 
 It was replaced with:
 
-``` properties
+```properties
 spring.datasource.password=${DB_PASSWORD}
 ```
 
@@ -583,7 +585,7 @@ The value is supplied locally through an environment variable.
 
 PowerShell example:
 
-``` powershell
+```powershell
 $env:DB_PASSWORD="your-local-password"
 ```
 
@@ -592,19 +594,19 @@ to Git.
 
 After this change:
 
--   The application started successfully.
--   All 8 automated tests passed.
--   The API smoke test passed.
+- The application started successfully.
+- All 8 automated tests passed.
+- The API smoke test passed.
 
 Therefore the credential externalization was successfully validated.
 
-------------------------------------------------------------------------
+---
 
 ## 17. HikariCP Connection Pool
 
 Spring Boot startup logs showed:
 
-``` text
+```text
 HikariPool-1 - Starting...
 HikariPool-1 - Added connection ...
 HikariPool-1 - Start completed.
@@ -612,7 +614,7 @@ HikariPool-1 - Start completed.
 
 Conceptual flow:
 
-``` text
+```text
 Spring Boot
     ↓
 DataSource
@@ -628,7 +630,7 @@ A connection pool maintains reusable database connections instead of
 creating a completely new physical connection for every database
 operation.
 
-------------------------------------------------------------------------
+---
 
 # Part V --- JPA, Hibernate and ORM
 
@@ -640,7 +642,7 @@ It maps Java objects/classes to relational database structures.
 
 For the Employee Service:
 
-``` text
+```text
 Java                          PostgreSQL
 ------------------------------------------------
 Employee                     employees
@@ -653,13 +655,13 @@ email                        email
 Instead of manually writing JDBC code for every basic operation,
 Hibernate can translate entity operations into SQL.
 
-------------------------------------------------------------------------
+---
 
 ## 19. JPA vs Hibernate
 
 This distinction is important:
 
-``` text
+```text
 JPA       → specification/API
 Hibernate → ORM implementation used to implement persistence behavior
 ```
@@ -669,19 +671,19 @@ JPA defines the standard concepts and annotations.
 Hibernate provides the implementation that performs ORM work and
 generates/executes SQL.
 
-------------------------------------------------------------------------
+---
 
 ## 20. Employee Entity
 
 The application contains:
 
-``` text
+```text
 entity/Employee.java
 ```
 
 Core mapping concept:
 
-``` java
+```java
 @Entity
 @Table(name = "employees")
 public class Employee {
@@ -717,31 +719,31 @@ every new employee.
 
 Uses database identity generation for the primary key.
 
-------------------------------------------------------------------------
+---
 
 ## 21. Why `Long` Instead of `long` for the ID
 
 Primitive:
 
-``` java
+```java
 long
 ```
 
 has a default value of:
 
-``` text
+```text
 0
 ```
 
 Wrapper:
 
-``` java
+```java
 Long
 ```
 
 can be:
 
-``` text
+```text
 null
 ```
 
@@ -749,14 +751,14 @@ Before an entity is inserted, a generated ID may not exist yet.
 
 Therefore:
 
-``` text
+```text
 new Employee → id = null
 saved Employee → generated id assigned
 ```
 
 This makes `Long` appropriate for generated entity identifiers.
 
-------------------------------------------------------------------------
+---
 
 ## 22. JPA No-Argument Constructor
 
@@ -766,13 +768,13 @@ constructor so the persistence framework can instantiate entity objects.
 The application can still have additional constructors for convenient
 object creation.
 
-------------------------------------------------------------------------
+---
 
 ## 23. Hibernate DDL
 
 Development configuration uses:
 
-``` properties
+```properties
 spring.jpa.hibernate.ddl-auto=update
 spring.jpa.show-sql=true
 ```
@@ -782,7 +784,7 @@ local learning.
 
 Hibernate created the table:
 
-``` sql
+```sql
 create table employees (
     id bigint generated by default as identity,
     email varchar(255),
@@ -794,14 +796,14 @@ create table employees (
 
 Important future consideration:
 
-``` text
+```text
 ddl-auto=update
 ```
 
 is convenient for local learning, but production schema evolution should
 later be handled using a migration tool such as Flyway or Liquibase.
 
-------------------------------------------------------------------------
+---
 
 # Part VI --- Spring Data JPA Repository
 
@@ -809,13 +811,13 @@ later be handled using a migration tool such as Flyway or Liquibase.
 
 Created:
 
-``` text
+```text
 repository/EmployeeRepository.java
 ```
 
 Concept:
 
-``` java
+```java
 public interface EmployeeRepository
         extends JpaRepository<Employee, Long> {
 }
@@ -823,18 +825,18 @@ public interface EmployeeRepository
 
 Meaning:
 
-``` text
+```text
 Employee → entity managed by the repository
 Long     → type of Employee's primary key
 ```
 
-------------------------------------------------------------------------
+---
 
 ## 25. Why an Interface Works Without Writing an Implementation
 
 We did not manually create:
 
-``` text
+```text
 EmployeeRepositoryImpl
 ```
 
@@ -850,17 +852,17 @@ Spring Data JPA:
 
 Startup confirmed:
 
-``` text
+```text
 Found 1 JPA repository interface.
 ```
 
-------------------------------------------------------------------------
+---
 
 ## 26. Repository Methods Used
 
 Inherited methods used during Sprint 1 include:
 
-``` java
+```java
 save(...)
 findAll()
 findById(...)
@@ -870,7 +872,7 @@ delete(...)
 Spring Data JPA translates these operations into persistence behavior
 handled through JPA/Hibernate.
 
-------------------------------------------------------------------------
+---
 
 # Part VII --- Layered Architecture
 
@@ -878,7 +880,7 @@ handled through JPA/Hibernate.
 
 The Employee Service now follows:
 
-``` text
+```text
 Client / Postman
         ↓
 EmployeeController
@@ -900,7 +902,7 @@ PostgreSQL
 
 Responses travel back conceptually as:
 
-``` text
+```text
 PostgreSQL
     ↓
 Entity
@@ -914,7 +916,7 @@ EmployeeController
 JSON response
 ```
 
-------------------------------------------------------------------------
+---
 
 ## 28. Controller Responsibility
 
@@ -922,17 +924,17 @@ JSON response
 
 Responsibilities include:
 
--   URL mappings
--   HTTP methods
--   Path variables
--   Request bodies
--   Request validation trigger
--   HTTP status behavior
--   Returning API response DTOs
+- URL mappings
+- HTTP methods
+- Path variables
+- Request bodies
+- Request validation trigger
+- HTTP status behavior
+- Returning API response DTOs
 
 It should not contain persistence implementation details.
 
-------------------------------------------------------------------------
+---
 
 ## 29. Service Responsibility
 
@@ -940,19 +942,19 @@ It should not contain persistence implementation details.
 
 Responsibilities developed during Sprint 1 include:
 
--   Creating employees
--   Reading employees
--   Updating employees
--   Deleting employees
--   Checking missing employees
--   Checking duplicate email addresses
--   Mapping request DTO data to entities
--   Mapping entities to response DTOs
+- Creating employees
+- Reading employees
+- Updating employees
+- Deleting employees
+- Checking missing employees
+- Checking duplicate email addresses
+- Mapping request DTO data to entities
+- Mapping entities to response DTOs
 
 This keeps the controller thin and separates application logic from HTTP
 concerns.
 
-------------------------------------------------------------------------
+---
 
 ## 30. Repository Responsibility
 
@@ -961,7 +963,7 @@ concerns.
 The service calls repository methods rather than directly using SQL or
 directly controlling Hibernate.
 
-------------------------------------------------------------------------
+---
 
 # Part VIII --- REST API and CRUD
 
@@ -969,27 +971,29 @@ directly controlling Hibernate.
 
 Base path:
 
-``` text
+```text
 /api/employees
 ```
 
 Endpoints:
 
-  HTTP Method   Endpoint                Purpose
-  ------------- ----------------------- -------------------
-  POST          `/api/employees`        Create employee
-  GET           `/api/employees`        Get all employees
-  GET           `/api/employees/{id}`   Get one employee
-  PUT           `/api/employees/{id}`   Update employee
-  DELETE        `/api/employees/{id}`   Delete employee
+HTTP Method Endpoint Purpose
 
-------------------------------------------------------------------------
+---
+
+POST `/api/employees` Create employee
+GET `/api/employees` Get all employees
+GET `/api/employees/{id}` Get one employee
+PUT `/api/employees/{id}` Update employee
+DELETE `/api/employees/{id}` Delete employee
+
+---
 
 ## 32. Controller Annotations Learned
 
 Important annotations include:
 
-``` java
+```java
 @RestController
 @RequestMapping
 @PostMapping
@@ -1027,28 +1031,30 @@ Reads a dynamic URL segment such as the employee ID.
 
 Allows explicit success status codes such as:
 
-``` text
+```text
 201 Created
 204 No Content
 ```
 
-------------------------------------------------------------------------
+---
 
 ## 33. HTTP Status Codes Used
 
-  Status   Meaning       Usage
-  -------- ------------- -------------------------------------------
-  200      OK            Successful GET/PUT
-  201      Created       Employee successfully created
-  204      No Content    Employee successfully deleted
-  400      Bad Request   Request validation failure
-  404      Not Found     Employee ID does not exist
-  409      Conflict      Email conflicts with an existing employee
+Status Meaning Usage
+
+---
+
+200 OK Successful GET/PUT
+201 Created Employee successfully created
+204 No Content Employee successfully deleted
+400 Bad Request Request validation failure
+404 Not Found Employee ID does not exist
+409 Conflict Email conflicts with an existing employee
 
 This introduced the idea that an API should communicate not only through
 JSON but also through meaningful HTTP status codes.
 
-------------------------------------------------------------------------
+---
 
 # Part IX --- CRUD Execution Flow
 
@@ -1056,7 +1062,7 @@ JSON but also through meaningful HTTP status codes.
 
 Conceptual flow:
 
-``` text
+```text
 POST JSON
    ↓
 CreateEmployeeRequest
@@ -1086,18 +1092,18 @@ EmployeeResponse
 
 Observed SQL:
 
-``` sql
+```sql
 insert into employees (email,first_name,last_name)
 values (?,?,?)
 ```
 
-------------------------------------------------------------------------
+---
 
 ## 35. Get All Employees
 
 Flow:
 
-``` text
+```text
 GET /api/employees
     ↓
 Controller
@@ -1115,13 +1121,13 @@ List<EmployeeResponse>
 200 OK
 ```
 
-------------------------------------------------------------------------
+---
 
 ## 36. Get Employee by ID
 
 Observed SQL concept:
 
-``` sql
+```sql
 select ...
 from employees
 where id=?
@@ -1131,13 +1137,13 @@ where id=?
 is bound separately rather than directly concatenated into the SQL
 string.
 
-------------------------------------------------------------------------
+---
 
 ## 37. Update Employee
 
 Flow:
 
-``` text
+```text
 PUT /api/employees/{id}
     ↓
 UpdateEmployeeRequest
@@ -1163,19 +1169,19 @@ EmployeeResponse
 
 Observed SQL:
 
-``` sql
+```sql
 update employees
 set email=?, first_name=?, last_name=?
 where id=?
 ```
 
-------------------------------------------------------------------------
+---
 
 ## 38. Delete Employee
 
 Flow:
 
-``` text
+```text
 DELETE /api/employees/{id}
     ↓
 find employee
@@ -1191,11 +1197,11 @@ Hibernate DELETE
 
 Observed:
 
-``` sql
+```sql
 delete from employees where id=?
 ```
 
-------------------------------------------------------------------------
+---
 
 # Part X --- Java Concepts Introduced Naturally
 
@@ -1203,19 +1209,19 @@ delete from employees where id=?
 
 Spring Data's:
 
-``` java
+```java
 findById(id)
 ```
 
 returns:
 
-``` java
+```java
 Optional<Employee>
 ```
 
 Important understanding:
 
-``` text
+```text
 Employee exists    → Optional containing Employee
 Employee not found → Optional.empty()
 ```
@@ -1225,19 +1231,19 @@ It does **not** mean that `findById()` simply returns `null`.
 `Optional` explicitly represents the possibility that a value may or may
 not exist.
 
-------------------------------------------------------------------------
+---
 
 ## 40. `orElseThrow()`
 
 Initial code using a generic:
 
-``` java
+```java
 .orElseThrow()
 ```
 
 caused:
 
-``` text
+```text
 NoSuchElementException
 500 Internal Server Error
 ```
@@ -1246,19 +1252,19 @@ for a missing employee.
 
 It was improved to:
 
-``` java
+```java
 .orElseThrow(() -> new EmployeeNotFoundException(id))
 ```
 
 Now the application throws a domain-specific exception.
 
-------------------------------------------------------------------------
+---
 
 ## 41. Lambda Expressions
 
 Example:
 
-``` java
+```java
 () -> new EmployeeNotFoundException(id)
 ```
 
@@ -1267,13 +1273,13 @@ is empty.
 
 General form:
 
-``` text
+```text
 (parameters) -> behavior
 ```
 
 Another lambda appeared while building validation errors:
 
-``` java
+```java
 error -> errors.put(
     error.getField(),
     error.getDefaultMessage()
@@ -1283,7 +1289,7 @@ error -> errors.put(
 The important idea is that a lambda represents behavior/functionality
 that can be passed and executed where needed.
 
-------------------------------------------------------------------------
+---
 
 ## 42. Stream API
 
@@ -1291,7 +1297,7 @@ The GET-all operation maps entities into response DTOs using a stream.
 
 Concept:
 
-``` java
+```java
 return employeeRepository.findAll()
         .stream()
         .map(employee -> mapToResponse(employee))
@@ -1300,7 +1306,7 @@ return employeeRepository.findAll()
 
 Flow:
 
-``` text
+```text
 List<Employee>
     ↓ stream()
 Stream<Employee>
@@ -1312,13 +1318,13 @@ List<EmployeeResponse>
 
 Equivalent method-reference style introduced:
 
-``` java
+```java
 .map(this::mapToResponse)
 ```
 
 This was the first practical use of the Java Stream API in the project.
 
-------------------------------------------------------------------------
+---
 
 # Part XI --- Exception Handling
 
@@ -1326,13 +1332,13 @@ This was the first practical use of the Java Stream API in the project.
 
 Originally, requesting a nonexistent employee such as:
 
-``` text
+```text
 GET /api/employees/999
 ```
 
 produced:
 
-``` text
+```text
 500 Internal Server Error
 No value present
 ```
@@ -1343,17 +1349,17 @@ That response was technically wrong for the API.
 
 The resource was missing, so the correct HTTP meaning is:
 
-``` text
+```text
 404 Not Found
 ```
 
-------------------------------------------------------------------------
+---
 
 ## 44. `EmployeeNotFoundException`
 
 A custom exception was created:
 
-``` text
+```text
 exception/EmployeeNotFoundException.java
 ```
 
@@ -1361,23 +1367,23 @@ The service throws it when the requested employee does not exist.
 
 Concept:
 
-``` java
+```java
 .orElseThrow(() -> new EmployeeNotFoundException(id))
 ```
 
-------------------------------------------------------------------------
+---
 
 ## 45. Global Exception Handler
 
 Created:
 
-``` text
+```text
 exception/GlobalExceptionHandler.java
 ```
 
 using concepts such as:
 
-``` java
+```java
 @RestControllerAdvice
 @ExceptionHandler
 ResponseEntity
@@ -1390,7 +1396,7 @@ exception handling is centralized.
 
 Conceptual flow:
 
-``` text
+```text
 Service throws EmployeeNotFoundException
         ↓
 Spring propagates exception
@@ -1404,13 +1410,13 @@ structured JSON response
 
 Example:
 
-``` json
+```json
 {
   "error": "Employee not found with id 999"
 }
 ```
 
-------------------------------------------------------------------------
+---
 
 # Part XII --- DTOs
 
@@ -1421,7 +1427,7 @@ DTO means **Data Transfer Object**.
 Before DTO separation, the API could directly receive/return the JPA
 entity:
 
-``` text
+```text
 Client
   ↓
 Employee Entity
@@ -1433,7 +1439,7 @@ That tightly couples the external API contract to the persistence model.
 
 After DTO introduction:
 
-``` text
+```text
 Client
   ↓
 Request DTO
@@ -1447,7 +1453,7 @@ Database
 
 Response direction:
 
-``` text
+```text
 Database
   ↓
 Entity
@@ -1461,28 +1467,28 @@ Client
 
 This is a major architectural improvement because:
 
--   Clients cannot automatically control every entity field.
--   Persistence implementation is not directly exposed.
--   Validation can be request-specific.
--   Create and update contracts can evolve independently.
--   Response fields can be explicitly controlled.
--   Internal entity fields can later be added without automatically
-    exposing them.
--   API and database models can evolve separately.
+- Clients cannot automatically control every entity field.
+- Persistence implementation is not directly exposed.
+- Validation can be request-specific.
+- Create and update contracts can evolve independently.
+- Response fields can be explicitly controlled.
+- Internal entity fields can later be added without automatically
+  exposing them.
+- API and database models can evolve separately.
 
 Simple rule:
 
-``` text
+```text
 Request DTO  → what the client may send
 Entity       → how the application persists data
 Response DTO → what the client may receive
 ```
 
-------------------------------------------------------------------------
+---
 
 ## 47. DTOs Created
 
-``` text
+```text
 dto/
 ├── CreateEmployeeRequest.java
 ├── UpdateEmployeeRequest.java
@@ -1507,7 +1513,7 @@ Represents the API response.
 The controller therefore no longer needs to expose the JPA `Employee`
 entity directly.
 
-------------------------------------------------------------------------
+---
 
 ## 48. DTO-to-Entity and Entity-to-DTO Mapping
 
@@ -1515,7 +1521,7 @@ Mapping is currently handled in the service layer.
 
 Example response mapping concept:
 
-``` java
+```java
 private EmployeeResponse mapToResponse(Employee employee) {
     return new EmployeeResponse(
             employee.getId(),
@@ -1531,7 +1537,7 @@ For the current small service, manual mapping is clear and sufficient.
 A dedicated mapper or MapStruct can be introduced later if mapping
 complexity grows.
 
-------------------------------------------------------------------------
+---
 
 # Part XIII --- Bean Validation
 
@@ -1541,7 +1547,7 @@ Validation annotations were added to request DTO fields.
 
 Concept:
 
-``` java
+```java
 @NotBlank(message = "First name is required")
 private String firstName;
 
@@ -1555,17 +1561,17 @@ private String email;
 
 Controller uses:
 
-``` java
+```java
 @Valid @RequestBody CreateEmployeeRequest request
 ```
 
 and similarly for update requests.
 
-------------------------------------------------------------------------
+---
 
 ## 50. Validation Flow
 
-``` text
+```text
 HTTP JSON
     ↓
 Jackson converts JSON to Request DTO
@@ -1586,7 +1592,7 @@ DB     GlobalExceptionHandler
 A major benefit is that invalid request data is rejected before
 persistence logic executes.
 
-------------------------------------------------------------------------
+---
 
 ## 51. Structured Validation Errors
 
@@ -1595,7 +1601,7 @@ failures are converted into a clean field-to-message structure.
 
 Example:
 
-``` json
+```json
 {
   "firstName": "First name is required",
   "lastName": "Last name is required",
@@ -1605,27 +1611,27 @@ Example:
 
 HTTP status:
 
-``` text
+```text
 400 Bad Request
 ```
 
 This makes the API easier for frontend applications and API consumers to
 use.
 
-------------------------------------------------------------------------
+---
 
 ## 52. `Map` and `HashMap`
 
 While implementing structured validation errors, the project introduced:
 
-``` text
+```text
 Map
 HashMap
 ```
 
 Important distinction:
 
-``` text
+```text
 Map     → interface
 HashMap → mutable implementation
 ```
@@ -1636,7 +1642,7 @@ dynamically.
 `Map.of(...)` was also discussed as useful for small fixed immutable
 maps.
 
-------------------------------------------------------------------------
+---
 
 # Part XIV --- Email Uniqueness
 
@@ -1647,7 +1653,7 @@ model.
 
 Without a uniqueness rule, the database could contain:
 
-``` text
+```text
 Employee 1 → john@example.com
 Employee 2 → john@example.com
 ```
@@ -1656,7 +1662,7 @@ This can create ambiguous and inconsistent application data.
 
 The uniqueness rule was therefore implemented at **two levels**:
 
-``` text
+```text
 Application level
 +
 Database level
@@ -1664,13 +1670,13 @@ Database level
 
 Both are important.
 
-------------------------------------------------------------------------
+---
 
 ## 54. Spring Data Derived Query Method
 
 The repository gained an email-existence query such as:
 
-``` java
+```java
 boolean existsByEmail(String email);
 ```
 
@@ -1681,7 +1687,7 @@ the implementation behavior.
 
 Observed SQL concept:
 
-``` sql
+```sql
 select e1_0.id
 from employees e1_0
 where e1_0.email=?
@@ -1690,12 +1696,12 @@ fetch first ? rows only
 
 The method returns a boolean:
 
-``` text
+```text
 true  → matching email exists
 false → matching email does not exist
 ```
 
-------------------------------------------------------------------------
+---
 
 ## 55. Duplicate Email During Create
 
@@ -1704,7 +1710,7 @@ already exists.
 
 Concept:
 
-``` java
+```java
 if (employeeRepository.existsByEmail(request.getEmail())) {
     throw new DuplicateEmployeeEmailException(request.getEmail());
 }
@@ -1712,7 +1718,7 @@ if (employeeRepository.existsByEmail(request.getEmail())) {
 
 A custom exception was created:
 
-``` text
+```text
 DuplicateEmployeeEmailException
 ```
 
@@ -1720,7 +1726,7 @@ and handled globally.
 
 Example API response:
 
-``` json
+```json
 {
   "error": "Employee already exists with email arun@example.com"
 }
@@ -1728,7 +1734,7 @@ Example API response:
 
 HTTP status:
 
-``` text
+```text
 409 Conflict
 ```
 
@@ -1737,7 +1743,7 @@ Why 409?
 The request can be structurally valid, but it conflicts with existing
 application state.
 
-------------------------------------------------------------------------
+---
 
 ## 56. Update Email Uniqueness --- Important Edge Case
 
@@ -1745,13 +1751,13 @@ Update logic needs more care than create logic.
 
 Suppose:
 
-``` text
+```text
 Employee 7 → sony@example.com
 ```
 
 and we update employee 7 while keeping:
 
-``` text
+```text
 sony@example.com
 ```
 
@@ -1762,7 +1768,7 @@ employee** being updated.
 
 However, if employee 7 tries to change its email to:
 
-``` text
+```text
 john@example.com
 ```
 
@@ -1771,27 +1777,27 @@ and another employee already owns that email, the update must fail with
 
 Therefore update uniqueness conceptually asks:
 
-``` text
+```text
 Does another employee already own the requested email?
 ```
 
 not merely:
 
-``` text
+```text
 Does this email exist anywhere?
 ```
 
 Tested behaviors:
 
--   Keep employee's existing email → `200 OK`
--   Change to a new unused email → `200 OK`
--   Change to another employee's email → `409 Conflict`
--   Repeat update with the employee's own current email → `200 OK`
+- Keep employee's existing email → `200 OK`
+- Change to a new unused email → `200 OK`
+- Change to another employee's email → `409 Conflict`
+- Repeat update with the employee's own current email → `200 OK`
 
 This is an important example of business-rule logic belonging in the
 service layer.
 
-------------------------------------------------------------------------
+---
 
 ## 57. Database-Level Unique Constraint
 
@@ -1800,7 +1806,7 @@ to guarantee database integrity.
 
 A database unique constraint was added:
 
-``` text
+```text
 uk_employees_email
 ```
 
@@ -1809,7 +1815,7 @@ insert.
 
 Observed database error:
 
-``` text
+```text
 ERROR: duplicate key value violates unique constraint "uk_employees_email"
 Key (email)=(john@example.com) already exists.
 
@@ -1818,7 +1824,7 @@ SQL state: 23505
 
 This proves PostgreSQL itself now prevents duplicate employee emails.
 
-------------------------------------------------------------------------
+---
 
 ## 58. Why Both Application and Database Validation Matter
 
@@ -1826,28 +1832,28 @@ This proves PostgreSQL itself now prevents duplicate employee emails.
 
 Provides:
 
--   Friendly API behavior
--   Domain-specific exception
--   `409 Conflict`
--   Clean JSON message
+- Friendly API behavior
+- Domain-specific exception
+- `409 Conflict`
+- Clean JSON message
 
 ### Database-level constraint
 
 Provides:
 
--   Final data-integrity guarantee
--   Protection if another code path bypasses the service check
--   Protection against concurrent operations/race conditions that can
-    pass a pre-check
+- Final data-integrity guarantee
+- Protection if another code path bypasses the service check
+- Protection against concurrent operations/race conditions that can
+  pass a pre-check
 
 Simple rule:
 
-``` text
+```text
 Application check → good API/user experience
 Database constraint → authoritative data integrity
 ```
 
-------------------------------------------------------------------------
+---
 
 # Part XV --- Automated Testing
 
@@ -1855,29 +1861,29 @@ Database constraint → authoritative data integrity
 
 Manual Postman testing is valuable, but it has limitations:
 
--   A person must repeat every request.
--   Repeating many scenarios takes time.
--   It is easy to forget a case.
--   Regression testing becomes harder as the project grows.
+- A person must repeat every request.
+- Repeating many scenarios takes time.
+- It is easy to forget a case.
+- Regression testing becomes harder as the project grows.
 
 Automated tests allow repeatable verification.
 
 Command:
 
-``` bash
+```bash
 mvn test
 ```
 
 Maven compiles and executes the test suite using the configured test
 infrastructure.
 
-------------------------------------------------------------------------
+---
 
 ## 60. Application Context Test
 
 Existing test:
 
-``` text
+```text
 EmployeeServiceApplicationTests
 ```
 
@@ -1888,21 +1894,21 @@ This is different from a focused unit test.
 
 It verifies important integration/configuration wiring such as:
 
--   Spring configuration can load.
--   Beans can be discovered/created.
--   Repository infrastructure can initialize.
--   Persistence configuration can initialize.
+- Spring configuration can load.
+- Beans can be discovered/created.
+- Repository infrastructure can initialize.
+- Persistence configuration can initialize.
 
 During this sprint the context test connected to the configured
 PostgreSQL database.
 
-------------------------------------------------------------------------
+---
 
 ## 61. EmployeeService Unit Tests
 
 Created:
 
-``` text
+```text
 service/EmployeeServiceTest
 ```
 
@@ -1912,7 +1918,7 @@ The real repository is replaced by a Mockito mock.
 
 Conceptual architecture:
 
-``` text
+```text
 EmployeeService
       ↓
 Mock EmployeeRepository
@@ -1920,7 +1926,7 @@ Mock EmployeeRepository
 
 instead of:
 
-``` text
+```text
 EmployeeService
       ↓
 Real EmployeeRepository
@@ -1932,7 +1938,7 @@ PostgreSQL
 
 This makes service tests focused and fast.
 
-------------------------------------------------------------------------
+---
 
 ## 62. JUnit
 
@@ -1940,7 +1946,7 @@ JUnit provides the testing structure and assertions.
 
 A test generally follows:
 
-``` text
+```text
 Arrange
 Act
 Assert
@@ -1958,7 +1964,7 @@ Call the method being tested.
 
 Verify the result or exception.
 
-------------------------------------------------------------------------
+---
 
 ## 63. Mockito
 
@@ -1967,11 +1973,11 @@ dependency behavior.
 
 Important concepts introduced:
 
--   `@Mock`
--   `@InjectMocks`
--   `when(...).thenReturn(...)`
--   `verify(...)`
--   `never()`
+- `@Mock`
+- `@InjectMocks`
+- `when(...).thenReturn(...)`
+- `verify(...)`
+- `never()`
 
 ### `@Mock`
 
@@ -1987,7 +1993,7 @@ Defines how the mock should respond.
 
 Concept:
 
-``` java
+```java
 when(employeeRepository.existsByEmail(...))
         .thenReturn(false);
 ```
@@ -2003,13 +2009,13 @@ Checks that a repository method was **not** called.
 This is especially useful for duplicate-email behavior, where `save()`
 must not execute after the duplicate is detected.
 
-------------------------------------------------------------------------
+---
 
 ## 64. Assertions
 
 Important assertion concepts introduced include:
 
-``` java
+```java
 assertEquals(...)
 assertThrows(...)
 ```
@@ -2029,7 +2035,7 @@ executed.
 It succeeds only if its assertions and interaction expectations are
 satisfied.
 
-------------------------------------------------------------------------
+---
 
 ## 65. What the Tests Actually Verify
 
@@ -2037,7 +2043,7 @@ Automated tests are executable specifications.
 
 For example, a service test can express:
 
-``` text
+```text
 Given:
 email already exists
 
@@ -2058,13 +2064,13 @@ If it incorrectly saves the employee, the Mockito verification fails.
 This is how automated tests validate functionality rather than merely
 compiling code.
 
-------------------------------------------------------------------------
+---
 
 ## 66. Final Automated Test Result
 
 Final Maven result:
 
-``` text
+```text
 EmployeeServiceApplicationTests
 Tests run: 1
 Failures: 0
@@ -2080,7 +2086,7 @@ Skipped: 0
 
 Total:
 
-``` text
+```text
 Tests run: 8
 Failures: 0
 Errors: 0
@@ -2091,7 +2097,7 @@ BUILD SUCCESS
 
 Meaning:
 
-``` text
+```text
 1 application-context test
 +
 7 EmployeeService tests
@@ -2099,7 +2105,7 @@ Meaning:
 8 passing automated tests
 ```
 
-------------------------------------------------------------------------
+---
 
 ## 67. Mockito / Java Agent Warning
 
@@ -2110,7 +2116,7 @@ The warnings did **not** mean the tests failed.
 
 The test result remained:
 
-``` text
+```text
 BUILD SUCCESS
 ```
 
@@ -2119,7 +2125,7 @@ Sprint 1 functional failure.
 
 It can be addressed later when build hardening requires it.
 
-------------------------------------------------------------------------
+---
 
 # Part XVI --- Manual API Regression Testing
 
@@ -2131,28 +2137,30 @@ forward.
 After DTO and validation refactoring, all major CRUD behaviors were
 tested.
 
-  \#   Scenario                      Expected / Observed
-  ---- ----------------------------- ---------------------------------------
-  1    POST valid employee           `201 Created`
-  2    POST invalid employee         `400 Bad Request` + validation errors
-  3    GET all employees             `200 OK` + response DTO array
-  4    GET valid employee ID         `200 OK`
-  5    GET nonexistent employee      `404 Not Found`
-  6    PUT valid employee            `200 OK` + updated response
-  7    PUT invalid employee          `400 Bad Request`
-  8    PUT nonexistent employee      `404 Not Found`
-  9    DELETE existing employee      `204 No Content`
-  10   DELETE nonexistent employee   `404 Not Found`
+\# Scenario Expected / Observed
+
+---
+
+1 POST valid employee `201 Created`
+2 POST invalid employee `400 Bad Request` + validation errors
+3 GET all employees `200 OK` + response DTO array
+4 GET valid employee ID `200 OK`
+5 GET nonexistent employee `404 Not Found`
+6 PUT valid employee `200 OK` + updated response
+7 PUT invalid employee `400 Bad Request`
+8 PUT nonexistent employee `404 Not Found`
+9 DELETE existing employee `204 No Content`
+10 DELETE nonexistent employee `404 Not Found`
 
 Later uniqueness-specific tests also passed:
 
--   Create with unused email → success
--   Create with duplicate email → `409 Conflict`
--   Update retaining own email → success
--   Update to unused email → success
--   Update to another employee's email → `409 Conflict`
+- Create with unused email → success
+- Create with duplicate email → `409 Conflict`
+- Update retaining own email → success
+- Update to unused email → success
+- Update to another employee's email → `409 Conflict`
 
-------------------------------------------------------------------------
+---
 
 ## 69. Final Sprint Smoke Test
 
@@ -2161,7 +2169,7 @@ was performed.
 
 Results:
 
-``` text
+```text
 GET /api/employees
 → 200 OK
 
@@ -2178,7 +2186,7 @@ GET /api/employees/999
 This confirmed that the final configuration change did not break core
 API behavior.
 
-------------------------------------------------------------------------
+---
 
 # Part XVII --- Important Debugging Incidents
 
@@ -2186,7 +2194,7 @@ API behavior.
 
 Problem:
 
-``` text
+```text
 psql : The term 'psql' is not recognized
 ```
 
@@ -2197,19 +2205,19 @@ available through the command lookup path.
 
 Located:
 
-``` text
+```text
 C:\Program Files\PostgreSQL\17\bin\psql.exe
 ```
 
 Lesson:
 
-``` text
+```text
 Command not recognized ≠ software necessarily missing.
 ```
 
 Check installation location, executable, service status, and PATH.
 
-------------------------------------------------------------------------
+---
 
 ## 71. DataSource Configuration
 
@@ -2218,7 +2226,7 @@ PostgreSQL JDBC driver.
 
 Successful startup eventually showed:
 
-``` text
+```text
 Database JDBC URL: jdbc:postgresql://localhost:5432/nexus
 Database driver: PostgreSQL JDBC Driver
 Database version: 17.10
@@ -2229,13 +2237,13 @@ Lesson:
 A Spring Data/JPA dependency does not magically tell the application
 which database instance, database name, username, and password to use.
 
-------------------------------------------------------------------------
+---
 
 ## 72. Port 8080 Already in Use
 
 Startup reached the database successfully but then failed with:
 
-``` text
+```text
 Web server failed to start. Port 8080 was already in use.
 ```
 
@@ -2245,18 +2253,18 @@ The database can connect successfully while the web server still fails.
 
 After resolving the port conflict:
 
-``` text
+```text
 Tomcat started on port 8080
 Started EmployeeServiceApplication
 ```
 
-------------------------------------------------------------------------
+---
 
 ## 73. Whitelabel Error at `/`
 
 Opening:
 
-``` text
+```text
 http://localhost:8080/
 ```
 
@@ -2266,13 +2274,13 @@ This did **not** mean Spring Boot was broken.
 
 It meant:
 
-``` text
+```text
 Server running
 +
 No controller mapping exists for "/"
 ```
 
-------------------------------------------------------------------------
+---
 
 ## 74. Compilation Error from `greet()`
 
@@ -2281,7 +2289,7 @@ to a parameterized form.
 
 The application still called:
 
-``` java
+```java
 greetingService.greet()
 ```
 
@@ -2291,26 +2299,26 @@ Maven correctly failed compilation.
 
 Lesson:
 
-``` text
+```text
 Spring/Maven cannot bypass Java compile-time type/method rules.
 ```
 
 The caller and method signature must agree.
 
-------------------------------------------------------------------------
+---
 
 ## 75. Generic `orElseThrow()` Caused 500
 
 Initial missing-ID behavior produced:
 
-``` text
+```text
 NoSuchElementException
 500 Internal Server Error
 ```
 
 This was improved through:
 
-``` text
+```text
 EmployeeNotFoundException
 +
 GlobalExceptionHandler
@@ -2323,7 +2331,7 @@ Lesson:
 Exceptions should be translated into API semantics rather than leaking
 generic implementation failures.
 
-------------------------------------------------------------------------
+---
 
 ## 76. PowerShell/cURL JSON Quoting
 
@@ -2338,7 +2346,7 @@ Lesson:
 
 A `400` response can come from multiple stages:
 
-``` text
+```text
 Malformed JSON
 vs
 Valid JSON that fails Bean Validation
@@ -2346,13 +2354,13 @@ Valid JSON that fails Bean Validation
 
 They are different problems.
 
-------------------------------------------------------------------------
+---
 
 # Part XVIII --- Current Project Structure
 
 ## 77. Relevant Main Source Structure
 
-``` text
+```text
 backend/employee-service/
 └── src/main/
     ├── java/com/nexuslabs/employee_service/
@@ -2379,14 +2387,14 @@ backend/employee-service/
 
 Test structure includes:
 
-``` text
+```text
 src/test/java/com/nexuslabs/employee_service/
 ├── EmployeeServiceApplicationTests.java
 └── service/
     └── EmployeeServiceTest.java
 ```
 
-------------------------------------------------------------------------
+---
 
 # Part XIX --- Final Configuration Principles
 
@@ -2394,7 +2402,7 @@ src/test/java/com/nexuslabs/employee_service/
 
 Important configuration concepts at Sprint 1 completion include:
 
-``` properties
+```properties
 spring.application.name=employee-service
 
 spring.datasource.url=jdbc:postgresql://localhost:5432/nexus
@@ -2411,7 +2419,7 @@ Important rules:
 
 Use:
 
-``` properties
+```properties
 ${DB_PASSWORD}
 ```
 
@@ -2423,20 +2431,20 @@ Later database schema changes should move toward controlled migrations.
 
 ### SQL logging is useful while learning
 
-``` properties
+```properties
 spring.jpa.show-sql=true
 ```
 
 allowed us to connect repository operations to the SQL generated by
 Hibernate.
 
-------------------------------------------------------------------------
+---
 
 # Part XX --- End-to-End Mental Model
 
 ## 79. Valid Create Request
 
-``` text
+```text
 Postman
    ↓
 POST /api/employees
@@ -2478,11 +2486,11 @@ JSON
 201 Created
 ```
 
-------------------------------------------------------------------------
+---
 
 ## 80. Invalid Request
 
-``` text
+```text
 Postman
    ↓
 JSON
@@ -2505,11 +2513,11 @@ field-error JSON
 Service/repository persistence logic is not supposed to proceed for this
 validation failure.
 
-------------------------------------------------------------------------
+---
 
 ## 81. Missing Employee
 
-``` text
+```text
 GET /api/employees/999
    ↓
 Controller
@@ -2529,11 +2537,11 @@ GlobalExceptionHandler
 404 Not Found
 ```
 
-------------------------------------------------------------------------
+---
 
 ## 82. Duplicate Employee Email
 
-``` text
+```text
 POST valid request
    ↓
 Validation passes
@@ -2554,80 +2562,81 @@ GlobalExceptionHandler
 The database unique constraint provides an additional final integrity
 guarantee.
 
-------------------------------------------------------------------------
+---
 
 # Part XXI --- Sprint 1 Definition of Done
 
 ## 83. Functional Definition of Done
 
--   [x] Spring Boot application starts.
--   [x] Java 21 application builds.
--   [x] PostgreSQL connection works.
--   [x] `nexus` database is used.
--   [x] HikariCP connection pool initializes.
--   [x] JPA/Hibernate mapping works.
--   [x] `employees` table exists.
--   [x] Employee entity is persisted.
--   [x] Spring Data repository is detected.
--   [x] Controller/service/repository layering is implemented.
--   [x] POST employee works.
--   [x] GET all employees works.
--   [x] GET employee by ID works.
--   [x] PUT employee works.
--   [x] DELETE employee works.
--   [x] `201 Created` is returned for creation.
--   [x] `204 No Content` is returned for deletion.
--   [x] Missing employees return `404 Not Found`.
--   [x] Create request DTO exists.
--   [x] Update request DTO exists.
--   [x] Response DTO exists.
--   [x] JPA entity is not directly used as the controller response
-    contract.
--   [x] Bean Validation works.
--   [x] Validation failures return `400 Bad Request`.
--   [x] Structured field validation errors are returned.
--   [x] Duplicate email detection works.
--   [x] Duplicate email returns `409 Conflict`.
--   [x] Update uniqueness handles the employee's own email correctly.
--   [x] Database-level email unique constraint exists.
--   [x] PostgreSQL rejects duplicate email directly.
--   [x] Automated service tests exist.
--   [x] Application context test exists.
--   [x] All 8 automated tests pass.
--   [x] Database password is externalized using `DB_PASSWORD`.
--   [x] Application starts with the externalized password.
--   [x] Final smoke test passes.
--   [x] Sprint 1 notes finalized.
+- [x] Spring Boot application starts.
+- [x] Java 21 application builds.
+- [x] PostgreSQL connection works.
+- [x] `nexus` database is used.
+- [x] HikariCP connection pool initializes.
+- [x] JPA/Hibernate mapping works.
+- [x] `employees` table exists.
+- [x] Employee entity is persisted.
+- [x] Spring Data repository is detected.
+- [x] Controller/service/repository layering is implemented.
+- [x] POST employee works.
+- [x] GET all employees works.
+- [x] GET employee by ID works.
+- [x] PUT employee works.
+- [x] DELETE employee works.
+- [x] `201 Created` is returned for creation.
+- [x] `204 No Content` is returned for deletion.
+- [x] Missing employees return `404 Not Found`.
+- [x] Create request DTO exists.
+- [x] Update request DTO exists.
+- [x] Response DTO exists.
+- [x] JPA entity is not directly used as the controller response
+      contract.
+- [x] Bean Validation works.
+- [x] Validation failures return `400 Bad Request`.
+- [x] Structured field validation errors are returned.
+- [x] Duplicate email detection works.
+- [x] Duplicate email returns `409 Conflict`.
+- [x] Update uniqueness handles the employee's own email correctly.
+- [x] Database-level email unique constraint exists.
+- [x] PostgreSQL rejects duplicate email directly.
+- [x] Automated service tests exist.
+- [x] Application context test exists.
+- [x] All 8 automated tests pass.
+- [x] Database password is externalized using `DB_PASSWORD`.
+- [x] Application starts with the externalized password.
+- [x] Final smoke test passes.
+- [x] Sprint 1 notes finalized.
 
-------------------------------------------------------------------------
+---
 
 ## 84. Repository/Git Definition of Done
 
-Still to be completed immediately after this document is added:
+The Sprint 1 Git checkpoint was completed after the implementation and
+technical validation work:
 
--   [ ] Create/switch to the Sprint 1 feature branch while preserving
-    current working changes.
--   [ ] Review `git status`.
--   [ ] Review `git diff`.
--   [ ] Confirm no database password/secret is present in staged
-    changes.
--   [ ] Stage Sprint 1 source/test/config/documentation changes.
--   [ ] Commit Sprint 1.
--   [ ] Push the feature branch.
--   [ ] Merge Sprint 1 into `develop`.
--   [ ] Push `develop`.
--   [ ] Verify working tree is clean.
+- [x] Create/switch to the Sprint 1 feature branch while preserving
+      current working changes.
+- [x] Review `git status`.
+- [x] Review `git diff`.
+- [x] Confirm no database password/secret is present in staged
+      changes.
+- [x] Stage Sprint 1 source/test/config/documentation changes.
+- [x] Commit Sprint 1.
+- [x] Push the feature branch.
+- [x] Merge Sprint 1 into `develop`.
+- [x] Push `develop`.
+- [x] Verify working tree is clean.
 
 Therefore:
 
-``` text
+```text
 Sprint 1 technical implementation → COMPLETE
 Sprint 1 validation              → COMPLETE
 Sprint 1 documentation           → COMPLETE
-Sprint 1 Git checkpoint           → NEXT ACTION
+Sprint 1 Git checkpoint           → COMPLETE
 ```
 
-------------------------------------------------------------------------
+---
 
 # Part XXII --- Key Lessons to Remember
 
@@ -2635,7 +2644,7 @@ Sprint 1 Git checkpoint           → NEXT ACTION
 
 ### Maven
 
-``` text
+```text
 Maven manages build lifecycle and dependencies.
 Dependency → application library.
 Plugin → Maven/build functionality.
@@ -2644,7 +2653,7 @@ Transitive dependency → dependency required by another dependency.
 
 ### Spring Boot
 
-``` text
+```text
 @SpringBootApplication
     ↓
 configuration + auto-configuration + component scanning
@@ -2652,33 +2661,33 @@ configuration + auto-configuration + component scanning
 
 ### Spring IoC
 
-``` text
+```text
 Spring creates and manages application objects.
 ```
 
 ### Dependency Injection
 
-``` text
+```text
 A class receives its dependency instead of constructing it itself.
 ```
 
 ### JPA and Hibernate
 
-``` text
+```text
 JPA       → specification
 Hibernate → implementation
 ```
 
 ### Repository
 
-``` text
+```text
 Repository abstracts persistence operations.
 Spring Data creates the JpaRepository implementation at runtime.
 ```
 
 ### DTO
 
-``` text
+```text
 Request DTO  → client input contract
 Entity       → persistence model
 Response DTO → client output contract
@@ -2686,21 +2695,21 @@ Response DTO → client output contract
 
 ### Validation
 
-``` text
+```text
 @Valid + Bean Validation
 → reject bad requests before business/persistence logic
 ```
 
 ### Optional
 
-``` text
+```text
 Optional<Employee>
 → explicitly represents present or missing Employee
 ```
 
 ### Exception Handling
 
-``` text
+```text
 Business/domain exception
 → GlobalExceptionHandler
 → correct HTTP response
@@ -2708,35 +2717,35 @@ Business/domain exception
 
 ### Email uniqueness
 
-``` text
+```text
 Application check → friendly 409 response
 Database UNIQUE   → final integrity guarantee
 ```
 
 ### Unit Testing
 
-``` text
+```text
 Real service + mocked dependency
 → test service behavior in isolation
 ```
 
 ### Context Testing
 
-``` text
+```text
 Spring context starts successfully
 → configuration and Bean wiring can initialize
 ```
 
 ### Postman vs Automated Tests
 
-``` text
+```text
 Postman → manual end-to-end API verification
 JUnit/Mockito → repeatable automated behavior verification
 ```
 
 Both are useful and serve different purposes.
 
-------------------------------------------------------------------------
+---
 
 # Part XXIII --- What Sprint 1 Achieved
 
@@ -2746,7 +2755,7 @@ generated Spring Boot project foundation.
 At completion, it became a functioning backend service with a real
 database and a recognizable production-style layered structure:
 
-``` text
+```text
 REST API
 +
 DTO contracts
@@ -2782,35 +2791,9 @@ Platform features can be built without immediately jumping into
 security, Kafka, or microservice complexity before the core backend
 fundamentals are understood.
 
-------------------------------------------------------------------------
+---
 
-# Part XXIV --- Next Action
+# Part XXIV --- Sprint 2 Transition
 
-The next action is **not another Sprint 1 feature**.
-
-The next action is the Sprint 1 Git checkpoint:
-
-``` text
-Current working changes
-        ↓
-Create/switch to feature branch
-        ↓
-Review status and diff
-        ↓
-Verify no secrets
-        ↓
-Stage
-        ↓
-Commit
-        ↓
-Push feature branch
-        ↓
-Merge into develop
-        ↓
-Push develop
-        ↓
-Verify clean working tree
-```
-
-After that checkpoint is complete, Sprint 1 can be formally closed in
-Git and Sprint 2 planning/implementation can begin.
+The Sprint 1 Git checkpoint is complete, so Sprint 1 is formally closed
+in Git. The next action is Sprint 2 planning and implementation.
