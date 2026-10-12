@@ -15,8 +15,18 @@ public class CreateEmployeeRequest{
     @Email(message = "Email must be valid")
     private String email;
 
+    private Long departmentId;
+
     public CreateEmployeeRequest(){
     }
+
+    public Long getDepartmentId() {
+        return departmentId;
+    }
+    public void setDepartmentId(Long departmentId) {
+        this.departmentId = departmentId;
+    }
+
 
     public String getFirstName() {
         return firstName;

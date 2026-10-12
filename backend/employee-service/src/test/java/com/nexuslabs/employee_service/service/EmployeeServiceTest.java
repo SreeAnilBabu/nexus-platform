@@ -6,28 +6,58 @@ import com.nexuslabs.employee_service.dto.UpdateEmployeeRequest;
 import com.nexuslabs.employee_service.entity.Employee;
 import com.nexuslabs.employee_service.exception.DuplicateEmployeeEmailException;
 import com.nexuslabs.employee_service.exception.EmployeeNotFoundException;
+import com.nexuslabs.employee_service.repository.DepartmentRepository;
 import com.nexuslabs.employee_service.repository.EmployeeRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
 import org.mockito.Mockito;
+import com.nexuslabs.employee_service.entity.Department;
+import com.nexuslabs.employee_service.dto.PageResponse;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+
+import com.nexuslabs.employee_service.exception.DepartmentNotFoundException;
+
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.anyLong;
 
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.*;
 
 class EmployeeServiceTest {
 
-    private EmployeeRepository employeeRepository;
     private EmployeeService employeeService;
+
+    @Mock
+    private EmployeeRepository employeeRepository;
+    @Mock
+    private DepartmentRepository departmentRepository;
+
+
 
     @BeforeEach
     void setUp() {
         employeeRepository =
-                Mockito.mock(EmployeeRepository.class);
+                mock(EmployeeRepository.class);
+        departmentRepository = mock(DepartmentRepository.class);
 
         employeeService =
-                new EmployeeService(employeeRepository);
+                new EmployeeService(
+                        employeeRepository,
+                        departmentRepository
+                );
     }
 
     @Test
@@ -297,5 +327,76 @@ class EmployeeServiceTest {
 
         Mockito.verify(employeeRepository)
                 .delete(employee);
+    }
+
+    @Test
+    void shouldGetEmployeesByDepartment() {
+
+        Employee employee = new Employee(
+                "Alex",
+                "Thomas",
+                "alex.department@test.com"
+        );
+
+        Department department = new Department("Engineering");
+        employee.setDepartment(department);
+
+        Page<Employee> employeePage =
+                new PageImpl<>(List.of(employee));
+
+        when(departmentRepository.existsById(1L))
+                .thenReturn(true);
+
+        when(employeeRepository.findByDepartmentId(
+                eq(1L),
+                any(Pageable.class)
+        )).thenReturn(employeePage);
+
+        PageResponse<EmployeeResponse> result =
+                employeeService.getAllEmployees(
+                        0,
+                        5,
+                        "id",
+                        "asc",
+                        1L
+                );
+
+        assertEquals(1, result.getContent().size());
+
+        verify(departmentRepository)
+                .existsById(1L);
+
+        verify(employeeRepository)
+                .findByDepartmentId(
+                        eq(1L),
+                        any(Pageable.class)
+                );
+    }
+
+    @Test
+    void shouldThrowExceptionWhenFilteringByNonExistingDepartment() {
+
+        when(departmentRepository.existsById(999L))
+                .thenReturn(false);
+
+        assertThrows(
+                DepartmentNotFoundException.class,
+                () -> employeeService.getAllEmployees(
+                        0,
+                        5,
+                        "id",
+                        "asc",
+                        999L
+                )
+        );
+
+        verify(departmentRepository)
+                .existsById(999L);
+
+        verify(employeeRepository, never())
+                .findByDepartmentId(
+                        anyLong(),
+                        any(Pageable.class)
+                );
     }
 }

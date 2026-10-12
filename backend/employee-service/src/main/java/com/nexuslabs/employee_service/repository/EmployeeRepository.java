@@ -7,4 +7,6 @@ import org.springframework.data.domain.Pageable;
 public interface EmployeeRepository extends JpaRepository<Employee, Long>{
     boolean existsByEmail(String email);
     Page<Employee> findByFirstNameContainingIgnoreCase(String firstName,  Pageable pageable);
+    Page<Employee> findByDepartmentId(Long  departmentId, Pageable pageable);
+    boolean existsByDepartmentId(Long departmentId);
 }

@@ -40,4 +40,37 @@ public class GlobalExceptionHandler
         error.put("message",ex.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
+    @ExceptionHandler(DuplicateDepartmentNameException.class)
+    public ResponseEntity<Map<String, String>> handleDuplicateDepartmentName(
+            DuplicateDepartmentNameException ex) {
+
+        Map<String, String> error = new HashMap<>();
+        error.put("error", "Conflict");
+        error.put("message", ex.getMessage());
+
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(error);
+    }
+    @ExceptionHandler(DepartmentNotFoundException.class)
+    public ResponseEntity<Map<String,String>> handleDepartmentNotFound(DepartmentNotFoundException ex){
+        Map<String,String> error = new HashMap<>();
+        error.put("error", "Not Found");
+        error.put("message", ex.getMessage());
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(error);
+    }
+    @ExceptionHandler(DepartmentHasEmployeesException.class)
+    public ResponseEntity<Map<String, String>> handleDepartmentHasEmployees(
+            DepartmentHasEmployeesException ex) {
+
+        Map<String, String> error = new HashMap<>();
+        error.put("error", "Conflict");
+        error.put("message", ex.getMessage());
+
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(error);
+    }
 }

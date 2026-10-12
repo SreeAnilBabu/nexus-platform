@@ -31,8 +31,9 @@ public class EmployeeController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "5") int size,
             @RequestParam(defaultValue = "id") String sortBy,
-            @RequestParam(defaultValue = "asc") String direction) {
-        return employeeService.getAllEmployees(page,size,sortBy,direction);
+            @RequestParam(defaultValue = "asc") String direction,
+            @RequestParam(required = false) Long departmentId) {
+        return employeeService.getAllEmployees(page,size,sortBy,direction,departmentId);
     }
 
     @GetMapping("/{id}")

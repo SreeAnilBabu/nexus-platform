@@ -6,6 +6,7 @@ import com.nexuslabs.employee_service.dto.PageResponse;
 import com.nexuslabs.employee_service.dto.UpdateEmployeeRequest;
 import com.nexuslabs.employee_service.entity.Employee;
 import com.nexuslabs.employee_service.exception.DuplicateEmployeeEmailException;
+import com.nexuslabs.employee_service.repository.DepartmentRepository;
 import com.nexuslabs.employee_service.repository.EmployeeRepository;
 import org.springframework.stereotype.Service;
 import com.nexuslabs.employee_service.exception.EmployeeNotFoundException;
@@ -17,6 +18,9 @@ import com.nexuslabs.employee_service.exception.InvalidRequestParameterException
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.nexuslabs.employee_service.entity.Department;
+import com.nexuslabs.employee_service.exception.DepartmentNotFoundException;
+
 
 @Service
 public class EmployeeService{
@@ -24,21 +28,27 @@ public class EmployeeService{
     private static final Logger logger = LoggerFactory.getLogger(EmployeeService.class);
 
     private final EmployeeRepository employeeRepository;
+    private final DepartmentRepository departmentRepository;
 
-    public EmployeeService(EmployeeRepository employeeRepository) {
+    public EmployeeService(EmployeeRepository employeeRepository, DepartmentRepository departmentRepository) {
         this.employeeRepository = employeeRepository;
+        this.departmentRepository = departmentRepository;
     }
 
     public EmployeeResponse createEmployee(
             CreateEmployeeRequest request) {
+
         if (employeeRepository.existsByEmail(request.getEmail())){
             throw new DuplicateEmployeeEmailException(request.getEmail());
         }
+        Department department =
+                resolveDepartment(request.getDepartmentId());
         Employee employee = new Employee(
                 request.getFirstName(),
                 request.getLastName(),
                 request.getEmail()
         );
+        employee.setDepartment(department);
         Employee savedEmployee =
                 employeeRepository.save(employee);
 
@@ -54,7 +64,8 @@ public class EmployeeService{
             int page,
             int size,
             String sortBy,
-            String direction) {
+            String direction,
+            Long departmentId) {
 
         validatePaginationAndSorting(page, size, sortBy, direction);
 
@@ -69,7 +80,19 @@ public class EmployeeService{
 
         Pageable pageable = PageRequest.of(page, size,sort);
 
-        Page<Employee> employeePage = employeeRepository.findAll(pageable);
+        Page<Employee> employeePage;
+
+        if(departmentId == null){
+            employeePage = employeeRepository.findAll(pageable);
+        }else{
+            if(!departmentRepository.existsById(departmentId)){
+                throw new DepartmentNotFoundException(departmentId);
+            }
+            employeePage = employeeRepository.findByDepartmentId(
+                    departmentId, pageable
+            );
+        }
+        //= employeeRepository.findAll(pageable);
 
         return mapToPageResponse(employeePage);
     }
@@ -92,9 +115,14 @@ public class EmployeeService{
                 && employeeRepository.existsByEmail(request.getEmail())){
             throw new DuplicateEmployeeEmailException(request.getEmail());
         }
+
+       Department department =
+               resolveDepartment(request.getDepartmentId());
+
        employee.setFirstName(request.getFirstName());
        employee.setLastName(request.getLastName());
        employee.setEmail(request.getEmail());
+       employee.setDepartment(department);
 
         Employee updatedEmployee = employeeRepository.save(employee);
         return mapToResponse(updatedEmployee);
@@ -108,11 +136,17 @@ public class EmployeeService{
    }
 
     private EmployeeResponse mapToResponse(Employee employee) {
+
+        Long departmentId = employee.getDepartment() != null
+                ? employee.getDepartment().getId()
+                : null;
+
         return new EmployeeResponse(
                 employee.getId(),
                 employee.getFirstName(),
                 employee.getLastName(),
-                employee.getEmail()
+                employee.getEmail(),
+                departmentId
         );
     }
 
@@ -194,5 +228,17 @@ public class EmployeeService{
                 employeePage.isFirst(),
                 employeePage.isLast()
         );
+    }
+
+    private Department resolveDepartment(Long departmentId) {
+
+        if (departmentId == null) {
+            return null;
+        }
+
+        return departmentRepository.findById(departmentId)
+                .orElseThrow(
+                        () -> new DepartmentNotFoundException(departmentId)
+                );
     }
 }

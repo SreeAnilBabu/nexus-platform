@@ -8,6 +8,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import com.nexuslabs.employee_service.entity.Department;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -18,6 +21,9 @@ class EmployeeRepositoryTest {
 
     @Autowired
     private EmployeeRepository employeeRepository;
+
+    @Autowired
+    private DepartmentRepository departmentRepository;
 
     @Test
     void shouldFindEmployeesByFirstNameIgnoringCase() {
@@ -130,5 +136,41 @@ class EmployeeRepositoryTest {
 
         assertTrue(result.isEmpty());
         assertEquals(0, result.getTotalElements());
+    }
+
+    @Test
+    void shouldFindEmployeesByDepartmentId() {
+
+        Department engineering =
+                departmentRepository.save(
+                        new Department("Engineering")
+                );
+
+        Employee employee = new Employee(
+                "Alex",
+                "Thomas",
+                "alex.relationship@test.com"
+        );
+
+        employee.setDepartment(engineering);
+        employeeRepository.save(employee);
+
+        Pageable pageable =
+                PageRequest.of(0, 5);
+
+        Page<Employee> result =
+                employeeRepository.findByDepartmentId(
+                        engineering.getId(),
+                        pageable
+                );
+
+        assertEquals(1, result.getTotalElements());
+        assertEquals(
+                engineering.getId(),
+                result.getContent()
+                        .get(0)
+                        .getDepartment()
+                        .getId()
+        );
     }
 }

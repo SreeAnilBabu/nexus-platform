@@ -9,6 +9,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import com.nexuslabs.employee_service.dto.EmployeeResponse;
 import com.nexuslabs.employee_service.dto.PageResponse;
 import java.util.List;
+
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -29,7 +31,8 @@ public class EmployeeControllerTest {
                 1L,
                 "Anil",
                 "Updated",
-                "anil.updated@example.com"
+                "anil.updated@example.com",
+                null
         );
 
         PageResponse<EmployeeResponse> pageResponse = new PageResponse<>(
@@ -46,7 +49,8 @@ public class EmployeeControllerTest {
                 0,
                 5,
                 "id",
-                "asc"
+                "asc",
+                null
         )).thenReturn(pageResponse);
 
         mockMvc.perform(
@@ -75,7 +79,8 @@ public class EmployeeControllerTest {
                         7L,
                         "Sony",
                         "Updated",
-                        "sony.updated@example.com"
+                        "sony.updated@example.com",
+                        null
                 );
 
         PageResponse<EmployeeResponse> pageResponse =
@@ -119,5 +124,53 @@ public class EmployeeControllerTest {
                         get("/api/employees/search")
                 )
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void shouldGetEmployeesByDepartment() throws Exception {
+
+        PageResponse<EmployeeResponse> response =
+                new PageResponse<>(
+                        List.of(
+                                new EmployeeResponse(
+                                        12L,
+                                        "Alex",
+                                        "Thomas",
+                                        "alex.thomas@example.com",
+                                        1L
+                                )
+                        ),
+                        0,
+                        5,
+                        1,
+                        1,
+                        true,
+                        true
+                );
+
+        when(employeeService.getAllEmployees(
+                0,
+                5,
+                "id",
+                "asc",
+                1L
+        )).thenReturn(response);
+
+        mockMvc.perform(
+                        get("/api/employees")
+                                .param("departmentId", "1")
+                )
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].id").value(12))
+                .andExpect(jsonPath("$.content[0].firstName").value("Alex"))
+                .andExpect(jsonPath("$.content[0].departmentId").value(1));
+
+        verify(employeeService).getAllEmployees(
+                0,
+                5,
+                "id",
+                "asc",
+                1L
+        );
     }
 }
