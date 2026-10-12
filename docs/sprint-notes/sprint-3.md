@@ -3,7 +3,7 @@
 **Project:** Nexus Platform
 **Backend module:** `backend/employee-service`
 **Branch:** `feature/sprint-3-department-management`
-**Status:** Implementation and manual verification complete; final clean build, documentation commit, and merge pending.
+**Status:** COMPLETED — Final Maven verification successful, 21 automated tests passed, committed and merged into develop.
 **Latest automated result:** 21 tests passed, 0 failures, 0 errors (`mvn test`, 12 October 2026).
 
 > These notes capture the implementation and learning checkpoints completed during Sprint 3. They describe verified behavior from our development sessions, not an independent line-by-line audit of the current local source files.
@@ -107,12 +107,12 @@ We kept entities separate from API DTOs. Request DTOs use a no-argument construc
 
 ### 4.4 Department endpoints
 
-| Method | Path | Behavior |
-|---|---|---|
-| POST | `/api/departments` | Create; `201 Created` |
-| GET | `/api/departments` | List Departments; `200 OK` |
-| GET | `/api/departments/{id}` | Fetch one; `200` or `404` |
-| PUT | `/api/departments/{id}` | Update; `200`, `400`, `404`, or `409` |
+| Method | Path                    | Behavior                                        |
+| ------ | ----------------------- | ----------------------------------------------- |
+| POST   | `/api/departments`      | Create; `201 Created`                           |
+| GET    | `/api/departments`      | List Departments; `200 OK`                      |
+| GET    | `/api/departments/{id}` | Fetch one; `200` or `404`                       |
+| PUT    | `/api/departments/{id}` | Update; `200`, `400`, `404`, or `409`           |
 | DELETE | `/api/departments/{id}` | Delete empty Department; `204`, `404`, or `409` |
 
 The list endpoint returns a simple list because Departments are small reference data and useful for future dropdowns; Employee listing retains pagination.
@@ -127,7 +127,10 @@ The list endpoint returns a simple list because Departments are small reference 
 `GlobalExceptionHandler` (`@RestControllerAdvice`) maps exceptions to structured error bodies, using the established project convention:
 
 ```json
-{"error":"Conflict","message":"Cannot delete department with id: 1 because employees are assigned to it"}
+{
+  "error": "Conflict",
+  "message": "Cannot delete department with id: 1 because employees are assigned to it"
+}
 ```
 
 Controllers return DTOs directly and use `@ResponseStatus` for special success statuses; exception handlers use `ResponseEntity`.
@@ -241,12 +244,12 @@ The existing pagination validation, sorting, DTO mapping, and `PageResponse<Empl
 
 **Semantics:**
 
-| Request | Expected behavior |
-|---|---|
-| No `departmentId` | Original paginated Employee list |
-| Existing Department with Employees | Filtered paginated list |
-| Existing Department without Employees | `200 OK` and empty page |
-| Nonexistent Department | `404 Not Found` |
+| Request                               | Expected behavior                |
+| ------------------------------------- | -------------------------------- |
+| No `departmentId`                     | Original paginated Employee list |
+| Existing Department with Employees    | Filtered paginated list          |
+| Existing Department without Employees | `200 OK` and empty page          |
+| Nonexistent Department                | `404 Not Found`                  |
 
 ### 7.3 Observed SQL and lessons
 
@@ -300,11 +303,11 @@ The Hibernate existence query selected a limited Employee ID (`fetch first ? row
 
 ### 9.1 Testing layers
 
-| Layer | What is real | What is mocked | Main purpose |
-|---|---|---|---|
-| Repository (`@DataJpaTest`) | Spring Data JPA, Hibernate, H2 | None for repository | Verify generated queries and relationship mapping |
-| Service (JUnit + Mockito) | Service logic | Repositories | Verify business branches and interactions |
-| Controller (`@WebMvcTest` + MockMvc) | MVC binding/controller | Service | Verify HTTP parameter binding, response JSON, delegation |
+| Layer                                | What is real                   | What is mocked      | Main purpose                                             |
+| ------------------------------------ | ------------------------------ | ------------------- | -------------------------------------------------------- |
+| Repository (`@DataJpaTest`)          | Spring Data JPA, Hibernate, H2 | None for repository | Verify generated queries and relationship mapping        |
+| Service (JUnit + Mockito)            | Service logic                  | Repositories        | Verify business branches and interactions                |
+| Controller (`@WebMvcTest` + MockMvc) | MVC binding/controller         | Service             | Verify HTTP parameter binding, response JSON, delegation |
 
 ### 9.2 New Sprint 3 tests
 
@@ -409,3 +412,36 @@ Do not stage credentials, generated build artifacts, or unrelated files. If the 
 7. Treat the database as the final integrity authority, especially when concurrency is involved.
 
 **Next recommended sprint:** Sprint 4 â€” Production-ready persistence and API foundations (Flyway migrations, isolated tests, JPA fetching/N+1, transactions, and database constraint handling).
+
+---
+
+## Sprint 3 — Final Closure Record
+
+### Final Build Verification
+
+- Command: `mvn clean verify`
+- Result: BUILD SUCCESS
+- Automated tests: 21
+- Failures: 0
+- Errors: 0
+- Executable Spring Boot JAR successfully generated.
+
+### Git Closure
+
+- Feature branch: `feature/sprint-3-department-management`
+- Target branch: `develop`
+- Commit: `1d9429f`
+- Commit message: `feat(department): complete sprint 3 department management and relationships`
+- Merge strategy: Fast-forward
+- Remote branch: `origin/develop`
+- Final working tree: Clean
+
+### Lessons Learned
+
+- PowerShell environment variables set using `$env:` are specific to the current process and its child processes.
+- The application-context test currently requires the PostgreSQL `DB_PASSWORD` environment variable.
+- Future improvements should isolate integration tests from the local development database.
+
+### Sprint Status
+
+Sprint 3 is officially completed and merged into develop.
