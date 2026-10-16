@@ -7,9 +7,7 @@ import java.util.Map;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-
-import java.util.Map;
-import java.util.HashMap;
+import org.springframework.dao.DataIntegrityViolationException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler
@@ -68,6 +66,22 @@ public class GlobalExceptionHandler
         Map<String, String> error = new HashMap<>();
         error.put("error", "Conflict");
         error.put("message", ex.getMessage());
+
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(error);
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<Map<String, String>> handleDataIntegrityViolation(
+            DataIntegrityViolationException ex) {
+
+        Map<String, String> error = new HashMap<>();
+        error.put("error", "Conflict");
+        error.put(
+                "message",
+                "The requested operation conflicts with existing database data."
+        );
 
         return ResponseEntity
                 .status(HttpStatus.CONFLICT)

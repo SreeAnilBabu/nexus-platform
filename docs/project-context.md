@@ -2033,4 +2033,78 @@ These should be handled using a feature branch and verified staging before commi
 
 ---
 
+
+
+---
+
+# 55. CURRENT AUTHORITATIVE CHECKPOINT — 2026-10-16 (SUPERSEDES HISTORICAL CHECKPOINTS)
+
+> **Read this section first in future sessions.** Sections 1–54 preserve the original project setup and early learning history. In particular, Sections 40, 42, 45, and 54 describe the historical Sprint 1 checkpoint and **must not be treated as the current state**. This section supersedes those earlier status/next-step statements; do not delete the earlier history.
+
+## Current project and working branch
+
+- Project: Nexus Platform; GitHub `SreeAnilBabu/nexus-platform`.
+- Local workspace: `F:\Workspace\nexus-platform`.
+- Backend module: `backend/employee-service`; Java 21, Spring Boot 4.1.0, Maven, Spring Data JPA/Hibernate, PostgreSQL 17.10.
+- **Keep Java package `com.nexuslabs.employee_service` unchanged.**
+- Branch: `feature/sprint-4-persistence-foundation` (created from `develop` at `14efa0f`); Sprint 4 changes are **not committed or merged yet** as of this checkpoint. Verify branch with `git branch --show-current` before final Git actions.
+- `develop` includes Sprint 3 feature commit `1d9429f` and documentation correction `14efa0f`; Sprint 2 feature commit `4f834b6`.
+- User-provided `git status --short` on 2026-10-16 lists modified POM, Employee entity, exception handler, Employee/Department services, dev/prod properties, application context test; untracked Flyway migration, transaction test, exception handler test, test properties, and `docs/sprint-notes/sprint-4.md`. This is expected uncommitted Sprint 4 work. Documentation files will be updated before staging.
+
+## Completed sprints (do not repeat)
+
+### Sprint 0 — repository and learning foundation
+
+Git/GitHub, branching, project layout, README/LICENSE/.gitignore, Maven/JDK foundations, engineering journal, sprint notes.
+
+### Sprint 1 — employee-service foundation
+
+Spring Boot startup and dependency injection; PostgreSQL connectivity and secret externalization; Employee entity/repository; REST CRUD, controller/service/repository layering; request/response DTOs; Bean Validation; application exceptions and HTTP statuses; email uniqueness; Postman and tests. Dev DB `nexus`, Spring Boot port 8080. `DB_PASSWORD` environment variable required for normal local PostgreSQL use.
+
+### Sprint 2 — searching and tests
+
+Employee first-name search, pagination, sorting, department-independent employee listing, `PageResponse<T>`, parameter validation, logging, dev/prod profiles, repository H2 tests, controller MockMvc tests and service unit tests. 14 tests passing at closure.
+
+### Sprint 3 — department domain and relationships
+
+Department entity/repository/DTO/service/controller CRUD; `Employee.department` as `@ManyToOne` and inverse `Department.employees` as `@OneToMany`; nullable department for older employee rows; employee department assignment/removal and department filter; 404/409 handling; deletion blocked for departments with employees; service transaction on deletion; 21 tests passing at closure. Sprint 3 documentation is `docs/sprint-notes/sprint-3.md`.
+
+### Sprint 4 — production-ready persistence foundations (IMPLEMENTATION VERIFIED; DOCUMENTATION/GIT CLOSURE PENDING)
+
+1. **Flyway:** Added `spring-boot-starter-flyway` and `flyway-database-postgresql` dependencies; `src/main/resources/db/migration/V1__initial_schema.sql` reproduces the Sprint 1–3 PostgreSQL schema (`departments`, `employees`, identity PKs, employee email unique constraint, employee department FK). Existing `nexus` was baselined at V1 (`type=BASELINE`) without executing V1 against populated tables. Separate empty `nexus_flyway_test` successfully executed V1 (`type=SQL`) and Hibernate schema validation succeeded. `spring.jpa.hibernate.ddl-auto=validate` for dev/prod. `spring.flyway.baseline-on-migrate=false` after initial baseline (confirm file value in final review). A backup of `nexus` was reported; restoration was not tested.
+2. **Automated test isolation:** Added `src/test/resources/application-test.properties` for in-memory H2 with test-only `ddl-auto=create-drop`, Flyway disabled for H2, and `@ActiveProfiles("test")` on application-context test. The complete Maven suite succeeded without relying on local PostgreSQL credentials when run as instructed. PostgreSQL remains the production-like migration target; H2 does not verify PostgreSQL-specific behavior.
+3. **Transactions:** Service-level `@Transactional` on employee/department create/update/delete and `@Transactional(readOnly=true)` on reads including employee first-name search. `DepartmentTransactionTest` uses `TransactionTemplate`, `saveAndFlush`, a simulated unchecked failure, and a post-transaction assertion to demonstrate rollback. Understand transaction proxies, self-invocation, REQUIRED propagation, flush vs commit, and ACID basics. Deletion logs were changed to `Department deletion requested` to avoid implying pre-commit success.
+4. **Fetching and OSIV:** Changed `Employee.department` to `@ManyToOne(fetch=FetchType.LAZY)`. Observed SQL for employee listing dropped from two SELECT statements (employees plus department) to one SELECT; this observation is not a blanket guarantee against N+1. Set `spring.jpa.open-in-view=false` in dev/prod/test profiles. Postman verified GET employee list, GET employee by ID, GET departments, GET employees filtered by department all returned HTTP 200. Department filtering legitimately performs existence check plus employee query to distinguish invalid department 404 from valid empty result.
+5. **Database integrity:** PostgreSQL FK remains final integrity safeguard for concurrent department deletion/assignment. Added `@ExceptionHandler(DataIntegrityViolationException.class)` to `GlobalExceptionHandler`, returning generic HTTP 409 `{"error":"Conflict","message":"The requested operation conflicts with existing database data."}` without exposing SQL. `GlobalExceptionHandlerTest` directly tests the handler response. This is **not** a full concurrent PostgreSQL/HTTP integration test. Existing custom domain exception handlers remain.
+6. **Final verification reported 2026-10-16:** `mvn -Dtest=GlobalExceptionHandlerTest test`: 1 passed; `mvn clean verify`: **23 tests, 0 failures, 0 errors, BUILD SUCCESS**, executable Spring Boot JAR generated. Earlier transaction test 1 passed and complete suite 22 passed. No Sprint 4 commit yet.
+
+## Known limitations and deferred refinements
+
+- PostgreSQL-specific migrations need PostgreSQL integration tests for production-level confidence; current application-context H2 tests disable Flyway.
+- Database constraint handler is generic; map known constraint violations to precise business errors later, and test through HTTP/real PostgreSQL when suitable.
+- Concurrent delete/assign races are not comprehensively tested; service existence checks alone cannot prevent races.
+- Department case-insensitive uniqueness is application-enforced, not yet backed by a matching database unique index.
+- Logging after repository delete does not guarantee successful commit.
+- Existing API error shapes differ across handlers; consider a unified error contract later without silently breaking clients.
+- Existing Employee response currently exposes `departmentId`, not department details; add targeted fetch/projections only when endpoint requirements demand it.
+- No new V2 migration has been implemented yet. `joining_date` V2 was a **teaching example only**, not an implemented feature.
+- Mockito dynamic-agent warning and test-mock null IDs are nonblocking known observations.
+
+## Teaching and workflow rules — still mandatory
+
+- Follow concept → purpose → realistic Nexus Platform example → implementation → test → brief quiz/review.
+- Recommend one clear approach; prefer Postman over curl; don't prematurely add Security, Kafka, frontend, or microservices.
+- Assistant prepares detailed `docs/sprint-notes/sprint-N.md` files at each sprint end, with learning, implementation, tests, pitfalls, decisions and future reference.
+- **Finish and verify all documentation before Git add/commit/push/merge.** User explicitly dislikes post-commit documentation corrections.
+- Never commit secrets, IDE state or generated `target/` output. Confirm working branch, `git diff --check`, full tests, `git status`, and staged diff before commit.
+
+## Immediate next actions
+
+1. Save updated `docs/project-context.md` and `docs/engineering-journal.md`, plus detailed `docs/sprint-notes/sprint-4.md`, to the local repository.
+2. Confirm branch and review actual code/config diffs; confirm `baseline-on-migrate=false`, dev/prod/test OSIV false, no credentials, and correct migration and test files.
+3. Rerun `mvn clean verify` if anything in code/config changed after the successful 23-test run.
+4. Stage, inspect, commit Sprint 4 feature branch; push; merge into `develop` only after verification; update this checkpoint in a future sprint as appropriate.
+5. **Next learning module:** choose and implement a meaningful V2 schema evolution (not merely the hypothetical example) and continue production-ready persistence/API improvements as part of the next planned sprint; establish requirements and a concrete roadmap before coding.
+
+
 # END OF PERSISTENT PROJECT CONTEXT

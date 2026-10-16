@@ -32,6 +32,7 @@ public class DepartmentService{
         this.employeeRepository = employeeRepository;
     }
 
+    @Transactional
     public DepartmentResponse createDepartment(CreateDepartmentRequest request){
 
         String departmentName = request.getName().trim();
@@ -46,12 +47,14 @@ public class DepartmentService{
         return mapToResponse(savedDepartment);
     }
 
+    @Transactional(readOnly = true)
     public DepartmentResponse getDepartmentById(long id){
         Department department = departmentRepository.findById(id)
                 .orElseThrow(() -> new DepartmentNotFoundException(id));
         return mapToResponse(department);
     }
 
+    @Transactional(readOnly = true)
     public List<DepartmentResponse> getAllDepartments() {
 
         return departmentRepository.findAll()
@@ -60,6 +63,7 @@ public class DepartmentService{
                 .toList();
     }
 
+    @Transactional
     public DepartmentResponse updateDepartment(
             Long id,
             UpdateDepartmentRequest request) {
@@ -106,7 +110,7 @@ public class DepartmentService{
 
         departmentRepository.delete(department);
 
-        logger.info("Department deleted successfully with id={}", id);
+        logger.info("Department deletion requested for id={}", id);
     }
 
 }

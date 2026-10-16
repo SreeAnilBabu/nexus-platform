@@ -20,7 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.nexuslabs.employee_service.entity.Department;
 import com.nexuslabs.employee_service.exception.DepartmentNotFoundException;
-
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class EmployeeService{
@@ -35,6 +35,7 @@ public class EmployeeService{
         this.departmentRepository = departmentRepository;
     }
 
+    @Transactional
     public EmployeeResponse createEmployee(
             CreateEmployeeRequest request) {
 
@@ -60,6 +61,7 @@ public class EmployeeService{
         return mapToResponse(savedEmployee);
     }
 
+    @Transactional(readOnly = true)
     public PageResponse<EmployeeResponse> getAllEmployees(
             int page,
             int size,
@@ -97,6 +99,7 @@ public class EmployeeService{
         return mapToPageResponse(employeePage);
     }
 
+    @Transactional(readOnly = true)
     public EmployeeResponse getEmployeeById(Long id) {
         Employee employee = employeeRepository.findById(id)
                 .orElseThrow(() ->
@@ -104,6 +107,7 @@ public class EmployeeService{
         return mapToResponse(employee);
    }
 
+   @Transactional
    public EmployeeResponse updateEmployee(
            long id,
            UpdateEmployeeRequest request) {
@@ -128,6 +132,7 @@ public class EmployeeService{
         return mapToResponse(updatedEmployee);
    }
 
+   @Transactional
    public void deleteEmployee(long id) {
         Employee employee = employeeRepository.findById(id)
                 .orElseThrow(() -> new EmployeeNotFoundException(id));
@@ -150,6 +155,7 @@ public class EmployeeService{
         );
     }
 
+    @Transactional(readOnly = true)
     public PageResponse<EmployeeResponse> searchEmployeesByFirstName(
             String name,
             int page,
