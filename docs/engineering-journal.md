@@ -15,7 +15,6 @@ I also understood that the JVM executes bytecode, not Java source code or machin
 - How does Maven resolve transitive dependencies?
 - How does Spring Boot discover beans?
 
-
 ---
 
 ## Sprint 1 — Employee Service Foundation (completed)
@@ -74,3 +73,16 @@ I also understood that the JVM executes bytecode, not Java source code or machin
 - `mvn clean verify`: **23 tests, 0 failures, 0 errors, BUILD SUCCESS**; executable JAR built (2026-10-16).
 - Save updated project context, journal, and `docs/sprint-notes/sprint-4.md` **before Git staging and commit**.
 - Deferred: PostgreSQL-specific integration tests, race-condition coverage, DB-level case-insensitive department uniqueness, standardized API errors, and actual V2 schema evolution.
+
+## Sprint 5 — Employee Lifecycle and Business Rules (implementation and database verification completed 2026-10-18; Git closure pending)
+
+- Added optional `joiningDate` (`LocalDate`) and `employmentStatus` (`ACTIVE`, `RESIGNED`, `TERMINATED`). New employees default to ACTIVE; historical employees were backfilled to ACTIVE while retaining NULL joining dates.
+- Added Flyway `V2__employee_lifecycle.sql` using a data-preserving sequence: add columns, backfill, then apply default, NOT NULL, and CHECK constraint. Tested V2 on `nexus_flyway_test` before migrating original `nexus`.
+- Implemented PATCH `/api/employees/{id}/status`: only ACTIVE → RESIGNED or ACTIVE → TERMINATED; reject reverse, terminal-to-terminal and same-state transitions with HTTP 409. PUT cannot change lifecycle status.
+- Disabled physical employee deletion: DELETE returns HTTP 405 via `EmployeeDeletionNotAllowedException` and `GlobalExceptionHandler`; no stack trace in response. Configured `server.error.include-stacktrace=never` in dev.
+- Debugged `EmployeeRepositoryTest` failing with an H2 constraint/database-closed error while the dev profile was active. Added `@ActiveProfiles("test")`, preserving H2 `create-drop`/Flyway-disabled test isolation. Do not assume the exact H2 failure cause was proven.
+- Practiced why controller tests and service tests cover different boundaries; `@NotNull` vs Jackson enum parsing; `never().save()` vs JPA dirty checking; `@Transactional` vs optimistic locking (`@Version`, deferred).
+- Postman verified create/read/update, future joining date rejection (400), allowed transitions, rejected transitions (409), prohibited DELETE (405), and preservation of records.
+- Verified backup of original `nexus` using `pg_dump` custom archive and a separate `pg_restore` into `nexus_backup_verify` (9 employees, 1 department, Flyway V1 baseline). Original `nexus` successfully migrated to V2; post-migration counts: 9 employees, all ACTIVE, all joining dates NULL, 1 department.
+- Final `mvn clean verify`: **37 tests, 0 failures, 0 errors, 0 skipped; BUILD SUCCESS**; executable JAR built.
+- Sprint 5 documentation and Git integration are the remaining closure tasks. Keep backups out of Git.

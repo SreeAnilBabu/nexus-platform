@@ -87,4 +87,29 @@ public class GlobalExceptionHandler
                 .status(HttpStatus.CONFLICT)
                 .body(error);
     }
+
+    @ExceptionHandler(InvalidEmploymentStatusTransitionException.class)
+    public ResponseEntity<Map<String, String>> handleInvalidStatusTransition(
+            InvalidEmploymentStatusTransitionException ex) {
+
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(Map.of(
+                        "error", "Conflict",
+                        "message", ex.getMessage()
+                ));
+    }
+
+    @ExceptionHandler(EmployeeDeletionNotAllowedException.class)
+    public ResponseEntity<Map<String, String>> handleEmployeeDeletionNotAllowed(
+            EmployeeDeletionNotAllowedException ex) {
+
+        return ResponseEntity
+                .status(HttpStatus.METHOD_NOT_ALLOWED)
+                .body(Map.of(
+                        "error", "Method Not Allowed",
+                        "message", ex.getMessage()
+                ));
+    }
+
 }

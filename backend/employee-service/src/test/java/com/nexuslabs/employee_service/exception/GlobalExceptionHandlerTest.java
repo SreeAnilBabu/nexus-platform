@@ -37,4 +37,34 @@ class GlobalExceptionHandlerTest {
                 response.getBody().get("message")
         );
     }
+
+    @Test
+    void shouldReturnConflictForInvalidEmploymentStatusTransition() {
+
+        InvalidEmploymentStatusTransitionException exception =
+                new InvalidEmploymentStatusTransitionException(
+                        "Cannot change employment status from RESIGNED to ACTIVE"
+                );
+
+        ResponseEntity<Map<String, String>> response =
+                handler.handleInvalidStatusTransition(exception);
+
+        assertEquals(
+                HttpStatus.CONFLICT,
+                response.getStatusCode()
+        );
+
+        assertNotNull(response.getBody());
+
+        assertEquals(
+                "Conflict",
+                response.getBody().get("error")
+        );
+
+        assertEquals(
+                "Cannot change employment status from RESIGNED to ACTIVE",
+                response.getBody().get("message")
+        );
+    }
+
 }

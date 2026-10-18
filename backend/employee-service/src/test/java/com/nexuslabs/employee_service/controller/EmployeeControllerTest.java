@@ -1,5 +1,6 @@
 package com.nexuslabs.employee_service.controller;
 
+import com.nexuslabs.employee_service.entity.EmploymentStatus;
 import com.nexuslabs.employee_service.service.EmployeeService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,12 +10,18 @@ import org.springframework.test.web.servlet.MockMvc;
 import com.nexuslabs.employee_service.dto.EmployeeResponse;
 import com.nexuslabs.employee_service.dto.PageResponse;
 import java.util.List;
-
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import org.springframework.http.MediaType;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 
 @WebMvcTest(EmployeeController.class)
 public class EmployeeControllerTest {
@@ -32,7 +39,9 @@ public class EmployeeControllerTest {
                 "Anil",
                 "Updated",
                 "anil.updated@example.com",
-                null
+                null,
+                null,
+                EmploymentStatus.ACTIVE
         );
 
         PageResponse<EmployeeResponse> pageResponse = new PageResponse<>(
@@ -80,7 +89,9 @@ public class EmployeeControllerTest {
                         "Sony",
                         "Updated",
                         "sony.updated@example.com",
-                        null
+                        null,
+                        null,
+                        EmploymentStatus.ACTIVE
                 );
 
         PageResponse<EmployeeResponse> pageResponse =
@@ -137,7 +148,9 @@ public class EmployeeControllerTest {
                                         "Alex",
                                         "Thomas",
                                         "alex.thomas@example.com",
-                                        1L
+                                        1L,
+                                        null,
+                                        EmploymentStatus.ACTIVE
                                 )
                         ),
                         0,
@@ -173,4 +186,98 @@ public class EmployeeControllerTest {
                 1L
         );
     }
+
+    @Test
+    void shouldUpdateEmployeeEmploymentStatus() throws Exception {
+
+        EmployeeResponse response = new EmployeeResponse(
+                1L,
+                "John",
+                "Doe",
+                "john@example.com",
+                null,
+                null,
+                EmploymentStatus.RESIGNED
+        );
+
+        when(employeeService.updateEmploymentStatus(
+                1L,
+                EmploymentStatus.RESIGNED
+        )).thenReturn(response);
+
+        mockMvc.perform(
+                        patch("/api/employees/1/status")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("""
+                            {
+                                "status": "RESIGNED"
+                            }
+                            """)
+                )
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.employmentStatus").value("RESIGNED"));
+
+        verify(employeeService).updateEmploymentStatus(
+                1L,
+                EmploymentStatus.RESIGNED
+        );
+    }
+
+    @Test
+    void shouldRejectPhysicalEmployeeDeletion() throws Exception {
+
+        mockMvc.perform(
+                        delete("/api/employees/1")
+                )
+                .andExpect(status().isMethodNotAllowed());
+
+        verifyNoInteractions(employeeService);
+    }
+
+    @Test
+    void shouldRejectMissingEmploymentStatus() throws Exception {
+
+        mockMvc.perform(
+                        patch("/api/employees/1/status")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("""
+                            {}
+                            """)
+                )
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(employeeService);
+    }
+
+    @Test
+    void shouldRejectUnknownEmploymentStatus() throws Exception {
+
+        mockMvc.perform(
+                        patch("/api/employees/1/status")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("""
+                            {
+                                "status": "ON_LEAVE"
+                            }
+                            """)
+                )
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(employeeService);
+    }
+
+    @Test
+    void shouldRejectEmployeeDeletion() throws Exception {
+
+        mockMvc.perform(delete("/api/employees/7"))
+                .andExpect(status().isMethodNotAllowed())
+                .andExpect(jsonPath("$.error")
+                        .value("Method Not Allowed"))
+                .andExpect(jsonPath("$.message")
+                        .value("Physical deletion of employee records is not permitted"));
+
+        verifyNoInteractions(employeeService);
+    }
+
 }

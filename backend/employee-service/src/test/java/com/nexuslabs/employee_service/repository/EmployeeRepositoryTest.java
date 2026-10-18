@@ -1,6 +1,7 @@
 package com.nexuslabs.employee_service.repository;
 
 import com.nexuslabs.employee_service.entity.Employee;
+import com.nexuslabs.employee_service.entity.EmploymentStatus;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
@@ -15,8 +16,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.springframework.test.context.ActiveProfiles;
 
 @DataJpaTest
+@ActiveProfiles("test")
 class EmployeeRepositoryTest {
 
     @Autowired
@@ -48,7 +51,10 @@ class EmployeeRepositoryTest {
                         "Kumar",
                         "rahul.test@example.com"
                 );
-
+        assertEquals(
+                EmploymentStatus.ACTIVE,
+                employee1.getEmploymentStatus()
+        );
         employeeRepository.save(employee1);
         employeeRepository.save(employee2);
         employeeRepository.save(employee3);

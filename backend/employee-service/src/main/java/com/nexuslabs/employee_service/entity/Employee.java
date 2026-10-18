@@ -9,6 +9,9 @@ import jakarta.persistence.Column;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.FetchType;
+import java.time.LocalDate;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 
 @Entity
 @Table(name = "employees")
@@ -26,6 +29,13 @@ public class Employee {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "department_id")
     private Department department;
+
+    @Column(name = "joining_date")
+    private LocalDate joiningDate;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "employment_status", nullable = false, length = 20)
+    private EmploymentStatus employmentStatus = EmploymentStatus.ACTIVE;
 
     public Employee() {
     }
@@ -70,5 +80,21 @@ public class Employee {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public LocalDate getJoiningDate() {
+        return joiningDate;
+    }
+
+    public void setJoiningDate(LocalDate joiningDate) {
+        this.joiningDate = joiningDate;
+    }
+
+    public EmploymentStatus getEmploymentStatus() {
+        return employmentStatus;
+    }
+
+    public void setEmploymentStatus(EmploymentStatus employmentStatus) {
+        this.employmentStatus = employmentStatus;
     }
 }

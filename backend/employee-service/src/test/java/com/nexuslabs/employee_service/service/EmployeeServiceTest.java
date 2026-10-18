@@ -31,10 +31,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyLong;
 
 import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
+import com.nexuslabs.employee_service.entity.EmploymentStatus;
+import com.nexuslabs.employee_service.exception.InvalidEmploymentStatusTransitionException;
 
 class EmployeeServiceTest {
 
@@ -158,6 +157,11 @@ class EmployeeServiceTest {
         assertEquals(
                 "rahul@example.com",
                 response.getEmail()
+        );
+
+        assertEquals(
+                EmploymentStatus.ACTIVE,
+                response.getEmploymentStatus()
         );
 
         Mockito.verify(employeeRepository)
@@ -309,27 +313,6 @@ class EmployeeServiceTest {
     }
 
     @Test
-    void shouldDeleteEmployee() {
-
-        Employee employee = new Employee(
-                "Sony",
-                "Updated",
-                "sony.updated@example.com"
-        );
-
-        Mockito.when(
-                employeeRepository.findById(7L)
-        ).thenReturn(
-                Optional.of(employee)
-        );
-
-        employeeService.deleteEmployee(7L);
-
-        Mockito.verify(employeeRepository)
-                .delete(employee);
-    }
-
-    @Test
     void shouldGetEmployeesByDepartment() {
 
         Employee employee = new Employee(
@@ -399,4 +382,206 @@ class EmployeeServiceTest {
                         any(Pageable.class)
                 );
     }
+
+    @Test
+    void shouldResignActiveEmployee() {
+        Employee employee = new Employee(
+                "John", "Doe", "john@example.com"
+        );
+
+        when(employeeRepository.findById(1L))
+                .thenReturn(Optional.of(employee));
+
+        when(employeeRepository.save(employee))
+                .thenReturn(employee);
+
+        EmployeeResponse response =
+                employeeService.updateEmploymentStatus(
+                        1L, EmploymentStatus.RESIGNED
+                );
+
+        assertEquals(
+                EmploymentStatus.RESIGNED,
+                response.getEmploymentStatus()
+        );
+
+        verify(employeeRepository).save(employee);
+    }
+
+    @Test
+    void shouldTerminateActiveEmployee() {
+        Employee employee = new Employee(
+                "Jane", "Doe", "jane@example.com"
+        );
+
+        when(employeeRepository.findById(2L))
+                .thenReturn(Optional.of(employee));
+
+        when(employeeRepository.save(employee))
+                .thenReturn(employee);
+
+        EmployeeResponse response =
+                employeeService.updateEmploymentStatus(
+                        2L, EmploymentStatus.TERMINATED
+                );
+
+        assertEquals(
+                EmploymentStatus.TERMINATED,
+                response.getEmploymentStatus()
+        );
+    }
+
+    @Test
+    void shouldRejectResignedEmployeeReturningToActive() {
+        Employee employee = new Employee(
+                "John", "Doe", "john@example.com"
+        );
+        employee.setEmploymentStatus(EmploymentStatus.RESIGNED);
+
+        when(employeeRepository.findById(1L))
+                .thenReturn(Optional.of(employee));
+
+        assertThrows(
+                InvalidEmploymentStatusTransitionException.class,
+                () -> employeeService.updateEmploymentStatus(
+                        1L, EmploymentStatus.ACTIVE
+                )
+        );
+
+        verify(employeeRepository, never()).save(any(Employee.class));
+    }
+
+    @Test
+    void shouldRejectSameStatusTransition() {
+        Employee employee = new Employee(
+                "John", "Doe", "john@example.com"
+        );
+
+        when(employeeRepository.findById(1L))
+                .thenReturn(Optional.of(employee));
+
+        assertThrows(
+                InvalidEmploymentStatusTransitionException.class,
+                () -> employeeService.updateEmploymentStatus(
+                        1L, EmploymentStatus.ACTIVE
+                )
+        );
+
+        verify(employeeRepository, never()).save(any(Employee.class));
+    }
+
+    @Test
+    void shouldRejectTerminatedEmployeeReturningToActive() {
+
+        Employee employee = new Employee(
+                "John", "Doe", "john@example.com"
+        );
+
+        employee.setEmploymentStatus(EmploymentStatus.TERMINATED);
+
+        when(employeeRepository.findById(1L))
+                .thenReturn(Optional.of(employee));
+
+        assertThrows(
+                InvalidEmploymentStatusTransitionException.class,
+                () -> employeeService.updateEmploymentStatus(
+                        1L,
+                        EmploymentStatus.ACTIVE
+                )
+        );
+
+        verify(employeeRepository, never()).save(any(Employee.class));
+    }
+
+    @Test
+    void shouldRejectResignedEmployeeBeingTerminated() {
+
+        Employee employee = new Employee(
+                "John", "Doe", "john@example.com"
+        );
+
+        employee.setEmploymentStatus(EmploymentStatus.RESIGNED);
+
+        when(employeeRepository.findById(1L))
+                .thenReturn(Optional.of(employee));
+
+        assertThrows(
+                InvalidEmploymentStatusTransitionException.class,
+                () -> employeeService.updateEmploymentStatus(
+                        1L,
+                        EmploymentStatus.TERMINATED
+                )
+        );
+
+        verify(employeeRepository, never()).save(any(Employee.class));
+    }
+
+    @Test
+    void shouldRejectTerminatedEmployeeResigning() {
+
+        Employee employee = new Employee(
+                "John", "Doe", "john@example.com"
+        );
+
+        employee.setEmploymentStatus(EmploymentStatus.TERMINATED);
+
+        when(employeeRepository.findById(1L))
+                .thenReturn(Optional.of(employee));
+
+        assertThrows(
+                InvalidEmploymentStatusTransitionException.class,
+                () -> employeeService.updateEmploymentStatus(
+                        1L,
+                        EmploymentStatus.RESIGNED
+                )
+        );
+
+        verify(employeeRepository, never()).save(any(Employee.class));
+    }
+
+    @Test
+    void shouldThrowNotFoundWhenUpdatingMissingEmployeeStatus() {
+
+        when(employeeRepository.findById(999L))
+                .thenReturn(Optional.empty());
+
+        assertThrows(
+                EmployeeNotFoundException.class,
+                () -> employeeService.updateEmploymentStatus(
+                        999L,
+                        EmploymentStatus.RESIGNED
+                )
+        );
+
+        verify(employeeRepository, never()).save(any(Employee.class));
+    }
+
+    @Test
+    void shouldPreserveEmploymentStatusDuringNormalUpdate() {
+
+        Employee employee = new Employee(
+                "John", "Doe", "john@example.com"
+        );
+        employee.setEmploymentStatus(EmploymentStatus.RESIGNED);
+
+        UpdateEmployeeRequest request = new UpdateEmployeeRequest();
+        request.setFirstName("John");
+        request.setLastName("Updated");
+        request.setEmail("john@example.com");
+
+        when(employeeRepository.findById(1L))
+                .thenReturn(Optional.of(employee));
+
+        when(employeeRepository.save(employee))
+                .thenReturn(employee);
+
+        EmployeeResponse response =
+                employeeService.updateEmployee(1L, request);
+
+        assertEquals(
+                EmploymentStatus.RESIGNED,
+                response.getEmploymentStatus()
+        );
+    }
+
 }

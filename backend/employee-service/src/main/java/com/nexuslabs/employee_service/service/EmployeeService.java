@@ -21,6 +21,8 @@ import org.slf4j.LoggerFactory;
 import com.nexuslabs.employee_service.entity.Department;
 import com.nexuslabs.employee_service.exception.DepartmentNotFoundException;
 import org.springframework.transaction.annotation.Transactional;
+import com.nexuslabs.employee_service.entity.EmploymentStatus;
+import com.nexuslabs.employee_service.exception.InvalidEmploymentStatusTransitionException;
 
 @Service
 public class EmployeeService{
@@ -50,6 +52,7 @@ public class EmployeeService{
                 request.getEmail()
         );
         employee.setDepartment(department);
+        employee.setJoiningDate(request.getJoiningDate());
         Employee savedEmployee =
                 employeeRepository.save(employee);
 
@@ -127,18 +130,60 @@ public class EmployeeService{
        employee.setLastName(request.getLastName());
        employee.setEmail(request.getEmail());
        employee.setDepartment(department);
+       employee.setJoiningDate(request.getJoiningDate());
 
         Employee updatedEmployee = employeeRepository.save(employee);
         return mapToResponse(updatedEmployee);
    }
 
-   @Transactional
-   public void deleteEmployee(long id) {
+    @Transactional
+    public EmployeeResponse updateEmploymentStatus(
+            Long id,
+            EmploymentStatus newStatus) {
+
         Employee employee = employeeRepository.findById(id)
                 .orElseThrow(() -> new EmployeeNotFoundException(id));
 
-        employeeRepository.delete(employee);
-   }
+        EmploymentStatus currentStatus = employee.getEmploymentStatus();
+
+        if (newStatus == null) {
+            throw new InvalidRequestParameterException(
+                    "Employment status is required"
+            );
+        }
+
+        if (currentStatus == newStatus) {
+            throw new InvalidEmploymentStatusTransitionException(
+                    "Employee is already in status " + currentStatus
+            );
+        }
+
+        if (currentStatus != EmploymentStatus.ACTIVE) {
+            throw new InvalidEmploymentStatusTransitionException(
+                    "Cannot change employment status from "
+                            + currentStatus + " to " + newStatus
+            );
+        }
+
+        if (newStatus != EmploymentStatus.RESIGNED
+                && newStatus != EmploymentStatus.TERMINATED) {
+            throw new InvalidEmploymentStatusTransitionException(
+                    "Invalid transition from ACTIVE to " + newStatus
+            );
+        }
+
+        employee.setEmploymentStatus(newStatus);
+
+        Employee updatedEmployee = employeeRepository.save(employee);
+
+        logger.info(
+                "Employee lifecycle updated: id={}, previousStatus={}, newStatus={}",
+                id, currentStatus, newStatus
+        );
+
+        return mapToResponse(updatedEmployee);
+    }
+
 
     private EmployeeResponse mapToResponse(Employee employee) {
 
@@ -151,7 +196,9 @@ public class EmployeeService{
                 employee.getFirstName(),
                 employee.getLastName(),
                 employee.getEmail(),
-                departmentId
+                departmentId,
+                employee.getJoiningDate(),
+                employee.getEmploymentStatus()
         );
     }
 
