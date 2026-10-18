@@ -8,6 +8,9 @@ import com.nexuslabs.employee_service.service.EmployeeService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import com.nexuslabs.employee_service.dto.UpdateEmploymentStatusRequest;
+import org.springframework.web.server.ResponseStatusException;
+import com.nexuslabs.employee_service.exception.EmployeeDeletionNotAllowedException;
 
 @RestController
 @RequestMapping("/api/employees")
@@ -49,10 +52,12 @@ public class EmployeeController {
     }
 
     @DeleteMapping("/{id}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteEmployee(@PathVariable Long id){
-        employeeService.deleteEmployee(id);
+    public void deleteEmployee(@PathVariable Long id) {
+        throw new EmployeeDeletionNotAllowedException(
+                "Physical deletion of employee records is not permitted"
+        );
     }
+
 
     @GetMapping("/search")
     public PageResponse<EmployeeResponse> searchEmployees(
@@ -70,4 +75,16 @@ public class EmployeeController {
                 direction
         );
     }
+
+    @PatchMapping("/{id}/status")
+    public EmployeeResponse updateEmploymentStatus(
+            @PathVariable Long id,
+            @Valid @RequestBody UpdateEmploymentStatusRequest request) {
+
+        return employeeService.updateEmploymentStatus(
+                id,
+                request.getStatus()
+        );
+    }
+
 }

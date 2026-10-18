@@ -1,4 +1,6 @@
 package com.nexuslabs.employee_service.dto;
+import java.time.LocalDate;
+import com.nexuslabs.employee_service.entity.EmploymentStatus;
 
 public class EmployeeResponse {
 
@@ -9,12 +11,25 @@ public class EmployeeResponse {
 
     private Long departmentId;
 
-    public EmployeeResponse(Long id, String firstName, String lastName, String email, Long departmentId) {
+    private LocalDate joiningDate;
+    private EmploymentStatus employmentStatus;
+
+    public EmployeeResponse(
+            Long id,
+            String firstName,
+            String lastName,
+            String email,
+            Long departmentId,
+            LocalDate joiningDate,
+            EmploymentStatus employmentStatus) {
+
         this.id = id;
         this.firstName = firstName;
         this.lastName = lastName;
         this.email = email;
         this.departmentId = departmentId;
+        this.joiningDate = joiningDate;
+        this.employmentStatus = employmentStatus;
     }
 
     public Long getDepartmentId() {
@@ -35,5 +50,13 @@ public class EmployeeResponse {
 
     public String getEmail() {
         return email;
+    }
+
+    public LocalDate getJoiningDate() {
+        return joiningDate;
+    }
+
+    public EmploymentStatus getEmploymentStatus() {
+        return employmentStatus;
     }
 }

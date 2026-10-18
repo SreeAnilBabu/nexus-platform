@@ -2033,8 +2033,6 @@ These should be handled using a feature branch and verified staging before commi
 
 ---
 
-
-
 ---
 
 # 55. CURRENT AUTHORITATIVE CHECKPOINT — 2026-10-16 (SUPERSEDES HISTORICAL CHECKPOINTS)
@@ -2106,5 +2104,42 @@ Department entity/repository/DTO/service/controller CRUD; `Employee.department` 
 4. Stage, inspect, commit Sprint 4 feature branch; push; merge into `develop` only after verification; update this checkpoint in a future sprint as appropriate.
 5. **Next learning module:** choose and implement a meaningful V2 schema evolution (not merely the hypothetical example) and continue production-ready persistence/API improvements as part of the next planned sprint; establish requirements and a concrete roadmap before coding.
 
+---
+
+# Sprint 5 checkpoint — Employee Lifecycle (2026-10-18)
+
+> **Status:** Implementation, Postman tests, automated tests, and Flyway V2 migration on both scratch and original development PostgreSQL databases verified. Documentation integration and Git closure pending. This section supersedes earlier references that described V2 as only a future proposal.
+
+## Code and API
+
+- Current feature branch: `feature/sprint-5-employee-lifecycle` (verify Git state locally).
+- Java 21, Spring Boot 4.1.0, PostgreSQL 17.10, Hibernate 7.4.1, Flyway, Maven, H2 isolated tests.
+- Employee adds `LocalDate joiningDate` (nullable) and `EmploymentStatus employmentStatus` enum (`ACTIVE`, `RESIGNED`, `TERMINATED`), default ACTIVE.
+- Create/Update DTOs validate joiningDate using `@PastOrPresent`; GET response includes both fields.
+- `PATCH /api/employees/{id}/status`: only ACTIVE→RESIGNED and ACTIVE→TERMINATED allowed; invalid/repeated/terminal transitions return HTTP 409. PUT must not change status.
+- `DELETE /api/employees/{id}` explicitly returns HTTP 405; custom `EmployeeDeletionNotAllowedException` is mapped by `GlobalExceptionHandler` to `{ "error": "Method Not Allowed", "message": "Physical deletion of employee records is not permitted" }`.
+- `application-dev.properties` includes `server.error.include-stacktrace=never`. Existing error handlers are not yet globally standardized.
+
+## Database and safety
+
+- Flyway migration `V2__employee_lifecycle.sql` adds `joining_date DATE` and `employment_status VARCHAR(20)`, backfills existing rows to ACTIVE, sets ACTIVE default, NOT NULL, and allowed-values CHECK constraint.
+- Default datasource (`application.properties`) is `jdbc:postgresql://localhost:5432/nexus`; active profile `dev`. Scratch database URL override is run-scoped only: `-Dspring-boot.run.arguments=--spring.datasource.url=jdbc:postgresql://localhost:5432/nexus_flyway_test`.
+- Scratch `nexus_flyway_test`: Flyway V1 and V2 executed/validated; Hibernate startup and Postman lifecycle flows succeeded.
+- Original `nexus`: before V2, 9 employees, 1 department, Flyway V1 baseline. Before migration, a PostgreSQL custom archive backup `database/backups/nexus_before_sprint5_20261018_145122.dump` was created and restored into `nexus_backup_verify` (9 employees, 1 department, V1 baseline).
+- On 2026-10-18 Flyway applied V2 successfully to original `nexus`; post-migration: 9 employees, all ACTIVE, all joiningDate NULL, 1 department; Flyway history shows V1 baseline and V2 both successful. Do not modify applied migration scripts. Do not commit database backups; add `/database/backups/` to root `.gitignore` if absent.
+
+## Testing and lessons
+
+- Final `mvn clean verify`: **37 tests, 0 failures, 0 errors, 0 skipped; BUILD SUCCESS**, Spring Boot executable JAR generated.
+- Repository test initially failed with H2 check constraint/database-closed error while using dev profile. Explicit `@ActiveProfiles("test")` fixed test isolation; test profile uses H2 create-drop and Flyway disabled. Exact low-level H2 cause not proven.
+- Postman verified 201 create, 200 GET, allowed status PATCH 200, forbidden PATCH 409, future joiningDate POST/PUT 400, PUT status protection, DELETE 405 and subsequent GET record preservation.
+- Teaching: controller tests cover HTTP mapping/JSON/validation, service tests business logic; `@NotNull` and Jackson enum parsing fail at different stages; `never().save()` alone does not prove no dirty-checking writes; `@Transactional` is not equivalent to `@Version` optimistic locking.
+
+## Next action / learning preferences
+
+- Integrate `docs/sprint-notes/sprint-5.md`, append Sprint 5 to `docs/engineering-journal.md`, and add this checkpoint to `docs/project-context.md`; verify actual repo state and backup ignore rule **before** any Git staging/commit/push/merge.
+- Do not overwrite the long-term context or earlier journal entries with this short update; append it. Review stale `docs/sprint-5-handoff.md` after closure.
+- User prefers one recommended path, Postman, meaningful rather than constant quizzes, and complete documentation before Git commands.
+- Next sprint should be selected after Git closure; no premature Kafka/security/microservices expansion.
 
 # END OF PERSISTENT PROJECT CONTEXT

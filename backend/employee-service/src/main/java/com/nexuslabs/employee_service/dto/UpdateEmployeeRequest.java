@@ -2,6 +2,8 @@ package com.nexuslabs.employee_service.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import java.time.LocalDate;
+import jakarta.validation.constraints.PastOrPresent;
 
 public class UpdateEmployeeRequest {
 
@@ -16,6 +18,9 @@ public class UpdateEmployeeRequest {
     private String email;
 
     private Long departmentId;
+
+    @PastOrPresent(message = "Joining date cannot be in the future")
+    private LocalDate joiningDate;
 
     public UpdateEmployeeRequest(){
     }
@@ -46,5 +51,13 @@ public class UpdateEmployeeRequest {
     }
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public LocalDate getJoiningDate() {
+        return joiningDate;
+    }
+
+    public void setJoiningDate(LocalDate joiningDate) {
+        this.joiningDate = joiningDate;
     }
 }
